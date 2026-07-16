@@ -125,7 +125,7 @@ build/
 pubspec.lock
 
 # AI/ML models
-models/
+# models
 *.model
 *.pkl
 *.h5
