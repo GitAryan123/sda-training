@@ -1,0 +1,26 @@
+{
+  "name": "day11-rest-api",
+  "version": "1.0.0",
+  "description": "Day 11 — REST API Best Practices: caching, versioning, rate limiting, and swagger documentation",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "test": "node tests/api.test.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "dotenv": "^16.3.1",
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.10.0",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.5.0",
+    "morgan": "^1.10.0",
+    "pg": "^8.11.3",
+    "redis": "^4.6.8",
+    "swagger-jsdoc": "^6.2.8",
+    "swagger-ui-express": "^5.0.0",
+    "winston": "^3.10.0"
+  }
+}
