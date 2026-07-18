@@ -1,6 +1,11 @@
-const { body, param, query, validationResult } = require('express-validator');
-const { AppError } = require('./errorHandler');
+'use strict';
 
+const { body, param, query, validationResult } = require('express-validator');
+const { createAppError } = require('./errorHandler');
+
+/**
+ * Validation error mapper and reporter middleware
+ */
 const handleValidationErrors = (req, res, next) => {
   const errors = validationResult(req);
   if (!errors.isEmpty()) {
@@ -10,12 +15,12 @@ const handleValidationErrors = (req, res, next) => {
       value: error.value
     }));
     
-    return next(new AppError('Validation failed', 400, errorMessages));
+    return next(createAppError('Validation failed', 400, errorMessages));
   }
   next();
 };
 
-// User validation rules
+// User registration validation rules
 const validateUser = [
   body('name')
     .trim()
@@ -36,6 +41,7 @@ const validateUser = [
   handleValidationErrors
 ];
 
+// User login validation rules
 const validateLogin = [
   body('email')
     .isEmail()
@@ -47,6 +53,7 @@ const validateLogin = [
   handleValidationErrors
 ];
 
+// Product validation rules
 const validateProduct = [
   body('name')
     .trim()
@@ -69,6 +76,7 @@ const validateProduct = [
   handleValidationErrors
 ];
 
+// Order validation rules
 const validateOrder = [
   body('items')
     .isArray({ min: 1 })
@@ -96,6 +104,7 @@ const validateOrder = [
   handleValidationErrors
 ];
 
+// General ID parameter validation rule (expects UUID)
 const validateId = [
   param('id')
     .isUUID()
@@ -103,6 +112,7 @@ const validateId = [
   handleValidationErrors
 ];
 
+// Query parameter pagination validation rules
 const validatePagination = [
   query('page')
     .optional()
