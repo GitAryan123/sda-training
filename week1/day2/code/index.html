@@ -3,17 +3,20 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Advanced Dashboard</title>
+    <title>Apex Metrics Dashboard</title>
+    <!-- Outfit Font -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header class="header">
         <nav class="nav">
             <div class="nav-brand">
-                <h1>Dashboard</h1>
+                <span class="logo-symbol">▲</span>
+                <h1>Apex Metrics</h1>
             </div>
             <ul class="nav-menu">
-                <li><a href="#home">Home</a></li>
+                <li><a href="#overview" class="active">Overview</a></li>
                 <li><a href="#analytics">Analytics</a></li>
                 <li><a href="#settings">Settings</a></li>
             </ul>
@@ -24,33 +27,63 @@
         <aside class="sidebar">
             <nav class="sidebar-nav">
                 <ul>
-                    <li><a href="#dashboard">Dashboard</a></li>
-                    <li><a href="#users">Users</a></li>
-                    <li><a href="#reports">Reports</a></li>
+                    <li><a href="#dashboard" class="active"><span class="icon">📊</span>Dashboard</a></li>
+                    <li><a href="#users"><span class="icon">👥</span>Users</a></li>
+                    <li><a href="#reports"><span class="icon">📝</span>Reports</a></li>
                 </ul>
             </nav>
         </aside>
         
         <section class="content">
+            <div class="content-header">
+                <h2>Operational Intelligence</h2>
+                <button id="btn-sync" class="btn-sync">↻ Sync Data</button>
+            </div>
+            
             <div class="dashboard-grid">
-                <div class="card">
-                    <h3>Total Users</h3>
-                    <p class="metric">1,234</p>
+                <div class="card card-indigo">
+                    <div class="card-header">
+                        <h3>Total Accounts</h3>
+                        <span class="emoji">👥</span>
+                    </div>
+                    <p class="metric" id="metric-accounts">1,482</p>
+                    <span class="card-meta">Active subscription plans</span>
                 </div>
-                <div class="card">
-                    <h3>Revenue</h3>
-                    <p class="metric">$45,678</p>
+                <div class="card card-violet">
+                    <div class="card-header">
+                        <h3>Conversion Growth</h3>
+                        <span class="emoji">📈</span>
+                    </div>
+                    <p class="metric">+24.8%</p>
+                    <span class="card-meta">Weekly telemetry data</span>
                 </div>
-                <div class="card">
-                    <h3>Orders</h3>
-                    <p class="metric">567</p>
+                <div class="card card-emerald">
+                    <div class="card-header">
+                        <h3>Service Uptime</h3>
+                        <span class="emoji">✅</span>
+                    </div>
+                    <p class="metric">99.98%</p>
+                    <span class="card-meta">Load balancers operating normal</span>
                 </div>
+            </div>
+
+            <div class="logs-panel">
+                <div class="logs-header">
+                    <h4>Real-time Activity Feed</h4>
+                    <span class="pulse-indicator"></span>
+                </div>
+                <ul class="logs-list" id="activity-logs">
+                    <li><span class="log-time">10:14</span> System database cluster optimized successfully.</li>
+                    <li><span class="log-time">09:32</span> Weekly financial telemetry exported to storage.</li>
+                    <li><span class="log-time">08:05</span> Automated cloud storage backup completed.</li>
+                </ul>
             </div>
         </section>
     </main>
     
     <footer class="footer">
-        <p>&copy; 2024 Advanced Dashboard. All rights reserved.</p>
+        <p>&copy; 2026 Apex Systems Inc. Built with semantic guidelines.</p>
     </footer>
+    <script src="script.js"></script>
 </body>
 </html>
