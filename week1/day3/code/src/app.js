@@ -16,78 +16,134 @@ class DashboardApp {
             await this.initializeCharts();
             this.setupEventListeners();
             this.startPerformanceMonitoring();
-            console.error('App initialization successful');
+            console.log('[DashboardApp] System loaded successfully');
         } catch (error) {
-            console.error('App initialization error:', error);
-            this.showError('Failed to initialize dashboard');
+            console.error('[DashboardApp] Initialization failed:', error);
+            this.showError('Critical failure: Could not load Dashboard system.');
         }
     }
     
     async setupUI() {
-        // Create dashboard HTML structure
         const dashboardHTML = `
             <div class="dashboard-container">
-                <div class="charts-grid">
-                    <div class="chart-container">
-                        <h3>Revenue Trend</h3>
-                        <canvas id="revenueChart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h3>User Growth</h3>
-                        <canvas id="userChart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h3>Order Distribution</h3>
-                        <canvas id="orderChart"></canvas>
-                    </div>
-                    <div class="chart-container">
-                        <h3>Performance Overview</h3>
-                        <canvas id="performanceChart"></canvas>
-                    </div>
+                <!-- Action bar -->
+                <div class="control-actions">
+                    <button id="btn-refresh" class="btn btn-primary">↻ Refresh Telemetry</button>
+                    <button id="btn-clear-cache" class="btn btn-secondary">⚡ Clear Cache</button>
+                    <button id="btn-clear-logs" class="btn btn-secondary">🗑 Clear Logs</button>
                 </div>
-                <div class="performance-panel">
-                    <h3>Performance Metrics</h3>
-                    <div id="performance-metrics"></div>
+                
+                <div class="layout-grid">
+                    <!-- Charts Panel -->
+                    <div class="charts-grid" id="charts-container">
+                        <div class="chart-wrapper">
+                            <h3>Revenue Analytics</h3>
+                            <div class="canvas-container">
+                                <canvas id="revenueChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <h3>User Registrations</h3>
+                            <div class="canvas-container">
+                                <canvas id="userChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <h3>Order Status Breakdown</h3>
+                            <div class="canvas-container">
+                                <canvas id="orderChart"></canvas>
+                            </div>
+                        </div>
+                        <div class="chart-wrapper">
+                            <h3>Accounts & Revenue Performance</h3>
+                            <div class="canvas-container">
+                                <canvas id="performanceChart"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Performance Panel -->
+                    <div class="performance-panel">
+                        <div class="panel-header">
+                            <h3>Telemetry & Performance Log</h3>
+                            <span class="active-dot"></span>
+                        </div>
+                        <div class="metrics-list" id="performance-metrics">
+                            <div class="empty-state">Waiting for observer events...</div>
+                        </div>
+                    </div>
                 </div>
             </div>
         `;
         
-        document.querySelector('.content').innerHTML = dashboardHTML;
+        const container = document.querySelector('.content');
+        if (container) {
+            container.innerHTML = dashboardHTML;
+        } else {
+            throw new Error('No root content element found');
+        }
     }
     
     async initializeCharts() {
-        this.chartManager = new ChartManager('charts-grid', this.dataManager);
+        this.chartManager = new ChartManager('charts-container', this.dataManager);
     }
     
     setupEventListeners() {
-        // Add refresh button
-        const refreshBtn = document.createElement('button');
-        refreshBtn.textContent = 'Refresh Data';
-        refreshBtn.className = 'refresh-btn';
-        refreshBtn.addEventListener('click', () => this.refreshData());
-        document.querySelector('.content-header').appendChild(refreshBtn);
+        // Refresh Button
+        const refreshBtn = document.getElementById('btn-refresh');
+        if (refreshBtn) {
+            refreshBtn.addEventListener('click', async () => {
+                refreshBtn.disabled = true;
+                const originalText = refreshBtn.textContent;
+                refreshBtn.textContent = 'Syncing...';
+                
+                try {
+                    this.dataManager.clearCache();
+                    await this.chartManager.createCharts();
+                } catch (e) {
+                    this.performanceMonitor.recordError('refresh');
+                } finally {
+                    refreshBtn.textContent = originalText;
+                    refreshBtn.disabled = false;
+                }
+            });
+        }
         
-        // Add performance monitoring toggle
-        const monitorBtn = document.createElement('button');
-        monitorBtn.textContent = 'Toggle Performance Monitor';
-        monitorBtn.className = 'monitor-btn';
-        monitorBtn.addEventListener('click', () => this.togglePerformanceMonitor());
-        document.querySelector('.content-header').appendChild(monitorBtn);
-    }
-    
-    async refreshData() {
-        this.dataManager.clearCache();
-        await this.chartManager.createCharts();
-    }
-    
-    togglePerformanceMonitor() {
-        const panel = document.querySelector('.performance-panel');
-        panel.style.display = panel.style.display === 'none' ? 'block' : 'none';
+        // Clear Cache Button
+        const clearCacheBtn = document.getElementById('btn-clear-cache');
+        if (clearCacheBtn) {
+            clearCacheBtn.addEventListener('click', () => {
+                this.dataManager.clearCache();
+                this.updatePerformanceDisplay({
+                    name: 'Cache Action',
+                    value: 0,
+                    unit: 'Cache Cleared',
+                    timestamp: Date.now()
+                });
+            });
+        }
+        
+        // Clear Logs Button
+        const clearLogsBtn = document.getElementById('btn-clear-logs');
+        if (clearLogsBtn) {
+            clearLogsBtn.addEventListener('click', () => {
+                const logsList = document.getElementById('performance-metrics');
+                if (logsList) {
+                    logsList.innerHTML = '<div class="empty-state">Logs cleared.</div>';
+                }
+            });
+        }
     }
     
     startPerformanceMonitoring() {
+        // Observe performance events
         this.performanceMonitor.subscribe((metric) => {
             this.updatePerformanceDisplay(metric);
+        });
+        
+        // Expose data fetching delay telemetry to performance panel
+        this.dataManager.subscribe((endpoint, data, latency) => {
+            this.performanceMonitor.recordApiLatency(endpoint, latency);
         });
     }
     
@@ -95,35 +151,67 @@ class DashboardApp {
         const container = document.getElementById('performance-metrics');
         if (!container) return;
         
+        // Remove empty state if present
+        const emptyState = container.querySelector('.empty-state');
+        if (emptyState) emptyState.remove();
+        
         const metricElement = document.createElement('div');
         metricElement.className = 'metric-item';
+        
+        // Format value based on type
+        let formattedValue = '';
+        if (typeof metric.value === 'number') {
+            formattedValue = metric.value.toFixed(2);
+        } else {
+            formattedValue = metric.value;
+        }
+        
+        const timeStr = new Date(metric.timestamp).toLocaleTimeString();
+        
         metricElement.innerHTML = `
-            <span class="metric-name">${metric.name}:</span>
-            <span class="metric-value">${metric.value.toFixed(2)}</span>
-            <span class="metric-time">${new Date(metric.timestamp).toLocaleTimeString()}</span>
+            <div class="metric-info">
+                <span class="metric-name">${metric.name}</span>
+                <span class="metric-time">${timeStr}</span>
+            </div>
+            <div class="metric-badge">
+                ${formattedValue} ${metric.unit}
+            </div>
         `;
         
-        container.appendChild(metricElement);
+        // Slide-in effect
+        metricElement.style.opacity = '0';
+        metricElement.style.transform = 'translateY(10px)';
+        metricElement.style.transition = 'all 0.3s ease';
         
-        // Keep only last 10 metrics visible
+        container.insertBefore(metricElement, container.firstChild);
+        
+        setTimeout(() => {
+            metricElement.style.opacity = '1';
+            metricElement.style.transform = 'translateY(0)';
+        }, 30);
+        
+        // Limit log display to 15 items
         const items = container.querySelectorAll('.metric-item');
-        if (items.length > 10) {
-            items[0].remove();
+        if (items.length > 15) {
+            items[items.length - 1].remove();
         }
     }
     
     showError(message) {
-        document.querySelector('.content').innerHTML = `
-            <div class="error-container">
-                <h2>Dashboard Error</h2>
-                <p>${message}</p>
-                <button onclick="location.reload()">Reload Page</button>
-            </div>
-        `;
+        const container = document.querySelector('.content');
+        if (container) {
+            container.innerHTML = `
+                <div class="app-error-state">
+                    <h3>Dashboard System Failure</h3>
+                    <p>${message}</p>
+                    <button class="btn btn-primary" onclick="location.reload()">Reload Dashboard</button>
+                </div>
+            `;
+        }
     }
 }
 
-// Initialize the application
+// Initialize on DOM load
 document.addEventListener('DOMContentLoaded', () => {
     new DashboardApp();
 });

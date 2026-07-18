@@ -12,32 +12,43 @@ export class PerformanceMonitor {
     }
     
     observePerformance() {
-        // Monitor Core Web Vitals
         if ('PerformanceObserver' in window) {
-            // Largest Contentful Paint
-            new PerformanceObserver((list) => {
-                const entries = list.getEntries();
-                const lastEntry = entries[entries.length - 1];
-                this.recordMetric('LCP', lastEntry.startTime);
-            }).observe({ entryTypes: ['largest-contentful-paint'] });
+            // Largest Contentful Paint (LCP)
+            try {
+                new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    const lastEntry = entries[entries.length - 1];
+                    this.recordMetric('LCP', lastEntry.startTime, 'ms (Load Speed)');
+                }).observe({ type: 'largest-contentful-paint', buffered: true });
+            } catch (e) {
+                console.warn('LCP observation not supported', e);
+            }
             
-            // First Input Delay
-            new PerformanceObserver((list) => {
-                const entries = list.getEntries();
-                entries.forEach(entry => {
-                    this.recordMetric('FID', entry.processingStart - entry.startTime);
-                });
-            }).observe({ entryTypes: ['first-input'] });
+            // First Input Delay (FID)
+            try {
+                new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    entries.forEach(entry => {
+                        this.recordMetric('FID', entry.processingStart - entry.startTime, 'ms (Input Delay)');
+                    });
+                }).observe({ type: 'first-input', buffered: true });
+            } catch (e) {
+                console.warn('FID observation not supported', e);
+            }
             
-            // Cumulative Layout Shift
-            new PerformanceObserver((list) => {
-                const entries = list.getEntries();
-                entries.forEach(entry => {
-                    if (!entry.hadRecentInput) {
-                        this.recordMetric('CLS', entry.value);
-                    }
-                });
-            }).observe({ entryTypes: ['layout-shift'] });
+            // Cumulative Layout Shift (CLS)
+            try {
+                new PerformanceObserver((list) => {
+                    const entries = list.getEntries();
+                    entries.forEach(entry => {
+                        if (!entry.hadRecentInput) {
+                            this.recordMetric('CLS', entry.value, ' (Layout Stability)');
+                        }
+                    });
+                }).observe({ type: 'layout-shift', buffered: true });
+            } catch (e) {
+                console.warn('CLS observation not supported', e);
+            }
         }
     }
     
@@ -45,33 +56,47 @@ export class PerformanceMonitor {
         if ('memory' in performance) {
             setInterval(() => {
                 const memory = performance.memory;
-                this.recordMetric('memory-used', memory.usedJSHeapSize);
-                this.recordMetric('memory-total', memory.totalJSHeapSize);
-                this.recordMetric('memory-limit', memory.jsHeapSizeLimit);
+                // Convert to MB for better readability
+                const usedMB = memory.usedJSHeapSize / (1024 * 1024);
+                const limitMB = memory.jsHeapSizeLimit / (1024 * 1024);
+                
+                this.recordMetric('Memory Used', usedMB, 'MB');
+                this.recordMetric('Memory Limit', limitMB, 'MB');
+            }, 5000);
+        } else {
+            // Fallback mock metric if memory object not exposed (e.g. Firefox)
+            setInterval(() => {
+                const mockedUsed = 15 + Math.random() * 10;
+                this.recordMetric('Memory Used', mockedUsed, 'MB (Simulated)');
             }, 5000);
         }
     }
     
     observeUserInteractions() {
         let interactionCount = 0;
-        const startTime = performance.now();
-        
         ['click', 'keydown', 'scroll', 'touchstart'].forEach(eventType => {
             document.addEventListener(eventType, () => {
                 interactionCount++;
-                this.recordMetric('interaction-count', interactionCount);
+                this.recordMetric('Interactions', interactionCount, 'events');
             }, { passive: true });
         });
     }
     
-    recordMetric(name, value) {
+    recordApiLatency(endpoint, latency) {
+        this.recordMetric(`Latency [${endpoint}]`, latency, 'ms');
+    }
+    
+    recordError(type) {
+        const currentCount = this.metrics.get(`Errors [${type}]`)?.value || 0;
+        this.recordMetric(`Errors [${type}]`, currentCount + 1, 'errors occurred');
+    }
+    
+    recordMetric(name, value, unit = '') {
         const timestamp = Date.now();
-        const metric = { name, value, timestamp };
+        const metric = { name, value, unit, timestamp };
         
         this.metrics.set(name, metric);
         this.notifyObservers(metric);
-        
-        // Store in localStorage for persistence
         this.storeMetric(metric);
     }
     
@@ -85,62 +110,39 @@ export class PerformanceMonitor {
     
     subscribe(callback) {
         this.observers.add(callback);
+        // Expose unsubscribe callback
         return () => this.observers.delete(callback);
     }
     
     notifyObservers(metric) {
-        this.observers.forEach(callback => callback(metric));
+        this.observers.forEach(callback => {
+            try {
+                callback(metric);
+            } catch (err) {
+                console.error('[PerformanceMonitor] Observer callback error:', err);
+            }
+        });
     }
     
     storeMetric(metric) {
-        const stored = JSON.parse(localStorage.getItem('performance-metrics') || '[]');
-        stored.push(metric);
-        
-        // Keep only last 100 metrics
-        if (stored.length > 100) {
-            stored.splice(0, stored.length - 100);
+        try {
+            const stored = JSON.parse(localStorage.getItem('performance-metrics') || '[]');
+            stored.push(metric);
+            // Cap at 50 logs
+            if (stored.length > 50) {
+                stored.shift();
+            }
+            localStorage.setItem('performance-metrics', JSON.stringify(stored));
+        } catch (e) {
+            console.error('LocalStorage write failed:', e);
         }
-        
-        localStorage.setItem('performance-metrics', JSON.stringify(stored));
     }
     
     getStoredMetrics() {
-        return JSON.parse(localStorage.getItem('performance-metrics') || '[]');
-    }
-    
-    generateReport() {
-        const metrics = this.getAllMetrics();
-        const report = {
-            timestamp: Date.now(),
-            metrics: metrics,
-            summary: this.generateSummary(metrics)
-        };
-        
-        return report;
-    }
-    
-    generateSummary(metrics) {
-        const summary = {};
-        
-        metrics.forEach(metric => {
-            if (!summary[metric.name]) {
-                summary[metric.name] = {
-                    count: 0,
-                    total: 0,
-                    average: 0,
-                    min: Infinity,
-                    max: -Infinity
-                };
-            }
-            
-            const stat = summary[metric.name];
-            stat.count++;
-            stat.total += metric.value;
-            stat.average = stat.total / stat.count;
-            stat.min = Math.min(stat.min, metric.value);
-            stat.max = Math.max(stat.max, metric.value);
-        });
-        
-        return summary;
+        try {
+            return JSON.parse(localStorage.getItem('performance-metrics') || '[]');
+        } catch (e) {
+            return [];
+        }
     }
 }

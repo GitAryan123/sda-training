@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Apex Telemetry - Advanced Dashboard</title>
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;550;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <header class="header">
+        <nav class="nav">
+            <div class="nav-brand">
+                <span class="logo-symbol">❖</span>
+                <h1>Apex Telemetry</h1>
+            </div>
+            <ul class="nav-menu">
+                <li><a href="#overview" class="active">Overview</a></li>
+                <li><a href="#performance">Performance</a></li>
+            </ul>
+        </nav>
+    </header>
+    
+    <main class="main">
+        <aside class="sidebar">
+            <nav class="sidebar-nav">
+                <ul>
+                    <li><a href="#dashboard" class="active"><span class="icon">📊</span>Dashboard</a></li>
+                    <li><a href="#telemetry"><span class="icon">⚡</span>Telemetry</a></li>
+                </ul>
+            </nav>
+        </aside>
+        
+        <section class="content-wrapper">
+            <div class="content-header">
+                <h2>Advanced Visualizations</h2>
+                <!-- Buttons will be appended here by app.js -->
+            </div>
+            
+            <div class="content">
+                <!-- DashboardApp will render UI elements here -->
+                <div class="dashboard-loading">
+                    <div class="spinner"></div>
+                    <p>Initializing dashboard modules...</p>
+                </div>
+            </div>
+        </section>
+    </main>
+    
+    <footer class="footer">
+        <p>&copy; 2026 Apex Telemetry. Optimized JavaScript performance monitoring.</p>
+    </footer>
+    
+    <!-- Load app.js as ES module -->
+    <script type="module" src="src/app.js"></script>
+</body>
+</html>
