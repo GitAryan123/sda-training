@@ -1,183 +1,215 @@
 # Week 1 Demo Presentation
 
-## 🎯 Demo Objectives
-- Showcase working features and functionality
-- Demonstrate technical implementation
-- Highlight learning achievements
-- Collect stakeholder feedback
-- Plan for Week 2 development
-
-## 📋 Demo Agenda (30 minutes)
-
-### 1. Welcome & Overview (5 minutes)
-- Training program objectives
-- Week 1 focus areas
-- Key achievements summary
-- Demo structure
-
-### 2. Technical Implementation (15 minutes)
-- **Repository Structure**: Show organized codebase
-- **Git Workflow**: Demonstrate branching and PR process
-- **Responsive Design**: Show dashboard on different devices
-- **Real-Time Features**: Demonstrate live data updates
-- **Performance**: Show Lighthouse scores and optimization
-
-### 3. Code Quality (5 minutes)
-- **Code Review**: Show review process and quality metrics
-- **Testing**: Demonstrate test coverage and quality
-- **Documentation**: Show comprehensive documentation
-- **Best Practices**: Highlight coding standards
-
-### 4. Q&A & Feedback (5 minutes)
-- Answer questions from stakeholders
-- Collect feedback and suggestions
-- Discuss Week 2 planning
-- Address any concerns
-
-## 🚀 Demo Script
-
-### Introduction
-"Welcome to the Week 1 demo of our Advanced Frontend & Full-Stack Foundations training. Over the past week, we've built a comprehensive dashboard application that demonstrates modern web development practices, real-time data integration, and professional development workflows."
-
-### Technical Showcase
-"Let me show you what we've built:
-
-1. **Repository Structure**: Our codebase is well-organized with clear separation of concerns, comprehensive documentation, and proper version control.
-
-2. **Responsive Dashboard**: The application works seamlessly across all devices, from mobile phones to desktop computers, with smooth animations and modern CSS features.
-
-3. **Real-Time Data**: We've implemented WebSocket connections that provide live updates to the dashboard, showing real-time metrics and performance data.
-
-4. **Performance**: Our application achieves a 92/100 Lighthouse score, with optimized loading times and smooth user interactions.
-
-5. **Code Quality**: We've maintained high standards with 85% test coverage, comprehensive code reviews, and detailed documentation."
-
-### Key Features Demo
-"Let me demonstrate the key features:
-
-- **Dashboard Interface**: Clean, intuitive design with responsive layout
-- **Data Visualization**: Interactive charts that update in real-time
-- **Performance Monitoring**: Live performance metrics and optimization
-- **Error Handling**: Robust error management with user-friendly messages
-- **Mobile Experience**: Seamless experience across all devices"
-
-### Technical Implementation
-"Our technical implementation includes:
-
-- **Modern JavaScript**: ES6+ features, modules, and performance optimization
-- **React Architecture**: Component-based design with hooks and state management
-- **API Integration**: RESTful APIs with caching and error handling
-- **WebSocket Communication**: Real-time data synchronization
-- **Performance Optimization**: Code splitting, lazy loading, and caching"
-
-### Quality Assurance
-"We've maintained high quality standards:
-
-- **Code Review**: Every change goes through peer review
-- **Testing**: Comprehensive test coverage with automated testing
-- **Documentation**: Detailed documentation for all components and APIs
-- **Performance**: Continuous monitoring and optimization
-- **Security**: Input validation and secure data handling"
-
-### Learning Outcomes
-"Through this week, we've developed:
-
-- **Technical Skills**: Advanced frontend development, state management, API integration
-- **Process Skills**: Git workflow, code review, documentation, Agile practices
-- **Collaboration Skills**: Team communication, knowledge sharing, problem solving
-- **Quality Skills**: Testing, performance optimization, security awareness"
-
-### Week 2 Preview
-"Next week, we'll focus on backend development:
-
-- **Node.js Mastery**: Advanced server-side development
-- **Database Integration**: MongoDB and PostgreSQL
-- **API Development**: RESTful API design and implementation
-- **Authentication**: JWT and OAuth2 implementation
-- **Testing**: Backend testing strategies and tools"
-
-### Q&A Session
-"Now I'd like to open the floor for questions and feedback. What would you like to know about our implementation, or what suggestions do you have for improvement?"
-
-## 📊 Demo Metrics
-
-### Performance Metrics
-- **Load Time**: 1.2 seconds
-- **Lighthouse Score**: 92/100
-- **Bundle Size**: 245KB (gzipped)
-- **Test Coverage**: 85%
-
-### Quality Metrics
-- **Code Review**: 100% of changes reviewed
-- **Documentation**: 90% coverage
-- **Linting Score**: 98/100
-- **Security**: No vulnerabilities detected
-
-### Learning Metrics
-- **Commits**: 45 commits made
-- **Pull Requests**: 12 PRs merged
-- **Documentation**: 15 documents created
-- **Components**: 15 reusable components built
-
-## 🎯 Demo Success Criteria
-
-### Technical Success
-- [ ] All features work as expected
-- [ ] Performance meets requirements
-- [ ] Code quality is high
-- [ ] Documentation is comprehensive
-- [ ] Testing is thorough
-
-### Presentation Success
-- [ ] Clear communication of technical concepts
-- [ ] Effective demonstration of features
-- [ ] Professional presentation style
-- [ ] Responsive to questions and feedback
-- [ ] Confident technical knowledge
-
-### Learning Success
-- [ ] Demonstrates mastery of Week 1 concepts
-- [ ] Shows understanding of best practices
-- [ ] Indicates readiness for Week 2
-- [ ] Shows collaborative skills
-- [ ] Displays problem-solving abilities
-
-## 🔄 Post-Demo Actions
-
-### Immediate Actions
-1. **Collect Feedback**: Document all stakeholder feedback
-2. **Address Issues**: Fix any identified problems
-3. **Update Documentation**: Incorporate feedback into docs
-4. **Plan Improvements**: Identify areas for enhancement
-5. **Prepare for Week 2**: Set up backend development environment
-
-### Long-term Actions
-1. **Process Improvement**: Implement feedback into processes
-2. **Skill Development**: Focus on identified learning gaps
-3. **Quality Enhancement**: Improve based on feedback
-4. **Collaboration**: Strengthen team communication
-5. **Innovation**: Explore new technologies and approaches
-
-## 📚 Resources for Week 2
-
-### Backend Development
-- [Node.js Documentation](https://nodejs.org/docs/)
-- [Express.js Guide](https://expressjs.com/)
-- [MongoDB Tutorial](https://docs.mongodb.com/)
-- [PostgreSQL Guide](https://www.postgresql.org/docs/)
-
-### API Development
-- [REST API Design](https://restfulapi.net/)
-- [API Security](https://owasp.org/www-project-api-security/)
-- [JWT Authentication](https://jwt.io/)
-- [OAuth2 Guide](https://oauth.net/2/)
-
-### Testing
-- [Jest Testing](https://jestjs.io/)
-- [Supertest API Testing](https://github.com/visionmedia/supertest)
-- [MongoDB Testing](https://docs.mongodb.com/manual/testing/)
-- [PostgreSQL Testing](https://www.postgresql.org/docs/current/testing.html)
+> **Program:** SDA Training — Week 1 Review  
+> **Duration:** 30 minutes  
+> **Format:** Live code walkthrough + feature demo  
+> **Audience:** Instructor / Technical Reviewer  
 
 ---
 
-**Week 1 has been a tremendous success! Ready for Week 2: Advanced Backend & Databases?** 🚀
+## 🎯 Demo Objectives
+
+1. Show all 4 runnable projects and verify they build clean
+2. Walk through the progression from Day 2 static HTML → Day 5 live React dashboard
+3. Highlight the specific architectural decisions made at each day
+4. Present metrics (bundle size, build time, Web Vitals)
+5. Discuss challenges encountered and how they were resolved
+
+---
+
+## 📋 Demo Agenda (30 minutes)
+
+| Slot | Duration | Topic |
+|------|----------|-------|
+| 1 | 3 min | Opening — goals and structure of Week 1 |
+| 2 | 5 min | Repository tour — organization and Git workflow |
+| 3 | 8 min | Day 2 & 3 live demo — HTML/CSS/JS dashboards |
+| 4 | 8 min | Day 4 & 5 live demo — React + Real-Time dashboard |
+| 5 | 4 min | Architecture & code quality walkthrough |
+| 6 | 2 min | Week 2 preview + Q&A |
+
+---
+
+## 🗂️ Repository Tour (Slot 2)
+
+**Show in terminal:**
+```bash
+cd week1
+ls -la
+```
+
+**Points to highlight:**
+- Each day has its own isolated directory — `day1/` through `day7/`
+- Days with runnable apps have a `code/` subdirectory with a complete Vite project
+- Documentation lives alongside code — `docs/`, `README.md`, `learnings.md` per day
+- Day 6 produced standalone documentation in `day6/docs/` covering the whole week
+
+**Git log:**
+```bash
+git log --oneline -15
+```
+
+---
+
+## 🖥️ Day 2 & 3 Demo (Slot 3)
+
+### Day 2 — HTML5 + CSS3 Dashboard
+**Open:** `week1/day2/code/index.html` in browser (double-click or Live Server)
+
+**Show:**
+- Responsive 2-column grid layout that collapses on mobile
+- CSS custom properties panel — toggle `:root` variables in DevTools to show theming
+- Micro-animations: card hover lift (`transform: translateY(-2px)`)
+- Google Fonts `Outfit` loaded via `<link>` in `<head>`
+
+**Demo script:**
+> "Day 2 focused on building a premium HTML/CSS dashboard with no JavaScript. The goal was to show how far pure CSS can take you — responsive layouts, design tokens via CSS variables, and smooth hover animations all without a single line of JS."
+
+### Day 3 — Advanced JavaScript
+**Open:** `week1/day3/code/index.html` in browser
+
+**Show:**
+- Native SVG charts rendered in JavaScript — point to `visualizations.js`
+- Live performance metrics (FP, FCP, DOM loaded) in the performance panel
+- Filter controls updating chart data in real time
+- Module system — open DevTools and show the ES module network requests
+
+**Demo script:**
+> "Day 3 added the brain behind the dashboard. The charts are drawn in pure SVG — no Chart.js dependency. Every bar and line is a calculated `<path>` element. The performance monitor uses the PerformanceObserver API to read real browser timing data."
+
+---
+
+## ⚛️ Day 4 & 5 Demo (Slot 4)
+
+### Day 4 — React Advanced Dashboard
+
+**Start dev server:**
+```bash
+cd week1/day4/code
+npm run dev
+# → http://localhost:5173
+```
+
+**Show in browser:**
+- Dashboard header with 3 filter controls (date range, status, search)
+- 4 KPI cards — all data driven from `DataContext` (React Context)
+- SVG chart that updates when filter tabs are clicked
+- Performance Log panel with live Web Vitals
+
+**Show in code (VS Code):**
+- `Dashboard.jsx` — the orchestrating component
+- `DataContext.jsx` — how Context replaces prop-drilling
+- `hooks/useDataFetching.js` — the `useReducer` state machine with `idle → loading → success/error` transitions
+
+**Show DevTools → Application → open React DevTools if installed:**
+- Context tree showing shared `DataContext` value
+- Component re-render optimization via `React.memo`
+
+**Mobile demo:**
+- Open DevTools → Device toolbar → iPhone 14 (390px)
+- Show bottom sticky tab bar navigation
+- Show cards stacking vertically with full-width layout
+
+**Demo script:**
+> "Day 4 is where vanilla JavaScript became React. The key architectural decision was `useReducer` for async state — instead of three separate boolean flags, the hook moves through explicit states like a state machine. React Context means any component in the tree can access the cached telemetry without props being threaded through every layer."
+
+### Day 5 — Real-Time Telemetry Dashboard
+
+**Start dev server (or switch if already running):**
+```bash
+cd week1/day5/code
+npm run dev
+# → http://localhost:5173
+```
+
+**Show in browser:**
+- 3 metric cards: Revenue, Users, Orders
+- Watch them update every 4 seconds (simulated delta ticks)
+- ConnectionStatus badge — show the tooltip by clicking it (latency displayed)
+- Chart tabs — switch Revenue (line) → Users (bar) → Orders (donut)
+- Web Vitals panel (FP, FCP, DOM timing from real browser data)
+
+**Show in code:**
+- `services/ApiService.js` — point out `checkRateLimit()` and `fetchWithRetry()` with backoff formula comment
+- `services/WebSocketService.js` — point out `handleReconnect()` and jitter calculation
+- `hooks/useRealTimeData.js` — explain the three layers: REST fetch → WS subscription → simulation fallback
+
+**Demo script:**
+> "Day 5 is the capstone of Week 1's frontend work. The `ApiService` has a sliding-window rate limiter, exponential backoff with random jitter, and an in-memory cache. The `WebSocketService` manages reconnection with its own backoff. The `useRealTimeData` hook wires both together — and if the backend is unreachable, it generates deterministic mock data so the UI never goes blank. You're seeing that mock data right now, updating every 4 seconds."
+
+---
+
+## 🏗️ Architecture Walkthrough (Slot 5)
+
+**Open:** `week1/day6/docs/system-architecture.md` in preview
+
+**Show:**
+- Component architecture tree — explain the separation of Services / Hooks / Components
+- Data flow sequence — REST cache → retry → fallback
+- WebSocket state machine — `IDLE → CONNECTING → OPEN → DISCONNECTED → RECONNECTING`
+
+**Open:** `week1/day6/docs/uml-diagrams.md`
+
+**Show Mermaid diagrams:**
+- Component dependency graph — visual of Day 4 and Day 5 combined
+- Class diagram — `ApiService` and `WebSocketService` methods laid out
+
+**Open:** `week1/day7/code-review.md`
+
+**Highlight:**
+- Issues that were identified and fixed during review
+- Build verification table — both `npm run build` calls passed
+
+---
+
+## 📊 Demo Metrics
+
+| Metric | Value |
+|--------|-------|
+| Projects built and running | 4 |
+| Production builds passing | 2 (Day 4, Day 5) |
+| Day 5 bundle size (gzipped) | 53 KB JS |
+| Custom hooks written | 6 |
+| Service classes (no dependencies) | 2 |
+| Documentation files created | 8 |
+| Bugs found and fixed in review | 7 |
+| Days with mobile-responsive layout | 3 (Day 2, 4, 5) |
+
+---
+
+## ✅ Demo Success Criteria
+
+### Technical
+- [x] Day 4 `npm run build` exits 0
+- [x] Day 5 `npm run build` exits 0  
+- [x] Day 5 dashboard shows live metric updates every ~4 seconds
+- [x] ConnectionStatus badge renders with correct icon
+- [x] Chart toggles between Line / Bar / Donut correctly
+- [x] Mobile layout at 390px shows bottom tab bar with no horizontal overflow
+
+### Presentation
+- [x] Each day's work is framed with a "why" (motivation) before the "what" (demo)
+- [x] Code is shown — not just the running app
+- [x] Architecture diagram is used to explain relationships
+- [x] Challenges are acknowledged honestly, with resolutions explained
+
+---
+
+## 🔮 Week 2 Preview
+
+> "The architecture I've built in Week 1 is designed to plug into a real backend. `ApiService` already structures requests with proper headers — including `Authorization`. `WebSocketService` already speaks the server-push protocol. Next week, we build the server side: Express routes, MongoDB models, and Socket.io to replace the mock data with real persistence."
+
+**Three things to build in Week 2:**
+1. REST API in Express matching the schemas in `day6/docs/api-documentation.md`
+2. MongoDB collections for users, revenue, orders
+3. Socket.io server emitting `dataUpdate` events to replace the 4-second simulation timer
+
+---
+
+## Q&A Notes
+
+> Open for stakeholder questions. Key talking points ready:
+> - Why native SVG over Chart.js? → Zero dependency, full control, smaller bundle
+> - Why `useReducer` instead of `useState`? → Explicit state transitions prevent impossible states
+> - Why mock data fallback? → Decouples frontend from backend availability during development
+> - Why client-side rate limiting? → Prevents accidental request storms during development and edge network conditions

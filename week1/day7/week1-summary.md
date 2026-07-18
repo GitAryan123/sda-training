@@ -1,215 +1,164 @@
 # Week 1 Summary: Advanced Frontend & Full-Stack Foundations
 
+> **Training Program:** Software Development Acceleration (SDA)  
+> **Duration:** 7 Days  
+> **Trainee:** Aryan  
+> **Outcome:** ✅ Week 1 Complete — All objectives met  
+
+---
+
 ## 🎯 Objectives Achieved
-- ✅ Mastered Git workflow and GitHub collaboration
-- ✅ Built responsive, animated web applications
-- ✅ Implemented advanced JavaScript patterns
-- ✅ Created complex React applications with state management
-- ✅ Integrated APIs and real-time data
-- ✅ Documented work professionally
 
-## 📊 Key Metrics
-- **Commits Made**: 45
-- **Pull Requests**: 7
-- **Code Coverage**: 85%
-- **Performance Score**: 92/100
-- **Documentation Coverage**: 90%
+| Objective | Status |
+|-----------|--------|
+| Master Git workflow and GitHub collaboration | ✅ |
+| Build responsive, premium-grade web interfaces | ✅ |
+| Implement advanced JavaScript patterns (modules, async, performance) | ✅ |
+| Create complex React applications with hooks, context, and reducers | ✅ |
+| Build a production-grade API service layer with retry and caching | ✅ |
+| Implement real-time data with WebSocket integration | ✅ |
+| Write comprehensive system documentation and Agile artifacts | ✅ |
 
-## 🚀 Major Achievements
+---
 
-### Day 1: SDLC & GitHub Mastery
-- Established repository structure and branching strategy
-- Created PR and issue templates
-- Implemented conflict resolution workflows
-- Set up collaboration processes
+## 📅 Day-by-Day Achievements
 
-### Day 2: HTML5 & Advanced CSS
-- Built responsive dashboard with modern CSS
-- Implemented Flexbox and Grid layouts
-- Created smooth animations and transitions
-- Achieved cross-browser compatibility
+### Day 1 — SDLC & GitHub Mastery
+- Established repository structure under `sda-training/` with weekly and daily organization
+- Learned Git branching strategy: `main` → `feature/dayX-*` → PR → merge
+- Set up PR templates and review workflows
+- Learned conflict resolution and rebase fundamentals
 
-### Day 3: JavaScript Advanced
-- Mastered ES6+ features and modules
-- Implemented data visualization with Chart.js
-- Created performance monitoring system
-- Built modular, maintainable code
+### Day 2 — HTML5 & Advanced CSS
+- Built a multi-section telemetry dashboard with pure HTML5 and CSS3
+- Implemented CSS Grid and Flexbox layouts with responsive breakpoints
+- Used CSS custom properties (`--primary`, `--bg`, etc.) as a design token system
+- Added micro-animations: hover lifts, gradient shimmer, fade-in transitions
+- Applied the `Outfit` Google Font for a premium feel
 
-### Day 4: React Advanced
-- Implemented complex state management with hooks
-- Created reusable custom hooks
-- Built error boundaries and performance optimization
-- Established component architecture
+### Day 3 — Advanced JavaScript
+- Wrote modular ES6+ JavaScript: `import/export`, template literals, destructuring, optional chaining
+- Implemented async data loading with `fetch()`, `async/await`, and `try/catch` error handling
+- Built native SVG chart generators — line, bar, and donut charts without any charting library
+- Created a live performance monitoring system using the `PerformanceObserver` API
+- Identified and noted an `innerHTML` XSS surface in the error renderer (logged for fix)
 
-### Day 5: API & Real-Time Data
-- Integrated REST APIs with error handling
-- Implemented WebSocket connections
-- Created real-time data visualization
-- Built robust caching and retry mechanisms
+### Day 4 — React Advanced
+- Scaffolded a Vite + React 18 project and migrated the vanilla dashboard to React
+- Implemented a `useReducer` state machine for the data fetching lifecycle (`idle → loading → success/error`)
+- Created React Context (`DataContext.jsx`) to distribute cached telemetry across the component tree
+- Built 5+ custom hooks: `useDataFetching`, `useFilters`, `usePerformance`
+- Resolved the `.jsx` extension requirement in Vite for JSX-containing files
+- Fixed mobile layouts — implemented a fixed bottom tab bar at `≤ 480px` and collapsed sidebar at `≤ 1024px`
+- Fixed filter label vertical alignment with `align-items: center` on `.filter-group`
 
-### Day 6: Documentation & Agile
-- Created comprehensive system documentation
-- Built UML diagrams and architecture docs
-- Implemented Agile sprint planning
-- Established documentation standards
+### Day 5 — API & Real-Time Data
+- Wrote a bespoke `ApiService` class featuring:
+  - In-memory response caching with configurable TTL
+  - Exponential backoff with random jitter on retries
+  - Sliding-window rate limiter (10 req / 5s client-side)
+  - `AbortController` for request timeouts
+- Wrote a `WebSocketService` class featuring:
+  - Auto-reconnect with capped exponential backoff + jitter
+  - Heartbeat ping/pong every 30 seconds
+  - Offline message buffer that flushes on reconnect
+- Implemented `useRealTimeData` hook orchestrating REST + WebSocket with mock fallback
+- Built `ConnectionStatus.jsx` badge with tooltip, latency indicator, and force-reconnect button
+- Created native SVG Line/Bar/Donut chart visualizer in `ChartContainer.jsx`
+- Scaffolded a full `week1/day5/code/` Vite project with `npm run build` passing clean
 
-## 🔧 Technical Implementation
+### Day 6 — Documentation & Agile
+- Created 6 documentation files in `week1/day6/docs/`:
+  - `system-architecture.md` — full architecture spec with data flow sequences
+  - `uml-diagrams.md` — 5 Mermaid diagrams (component graph, sequence, state machine, class, burndown)
+  - `api-documentation.md` — endpoint schemas, error codes, WebSocket events, cache behaviour
+  - `sprint-planning.md` — 3 sprint backlogs, retrospectives, DoD checklist, capacity table
+  - `documentation-templates.md` — 5 reusable templates (component, hook, API, user story, bug)
+  - `documentation-standards.md` — writing guide, naming conventions, git commit format, PR checklist
 
-### Frontend Architecture
-```
-src/
-├── components/          # 15 reusable components
-├── hooks/              # 8 custom hooks
-├── services/           # 3 service layers
-├── utils/              # 12 utility functions
-└── styles/             # CSS modules and themes
-```
+---
 
-### Key Features Implemented
-- **Responsive Dashboard**: Multi-device compatibility
-- **Real-Time Updates**: WebSocket integration
-- **Data Visualization**: Interactive charts and metrics
-- **Performance Monitoring**: Real-time performance tracking
-- **Error Handling**: Comprehensive error management
-- **Caching**: Optimized data fetching and storage
+## 🔧 Technical Implementation Stats
 
-### Code Quality Metrics
-- **Lines of Code**: 2,450
-- **Functions**: 89
-- **Components**: 15
-- **Test Coverage**: 85%
-- **Linting Score**: 98/100
+| Metric | Value |
+|--------|-------|
+| Projects built | 4 (Day 2, Day 3, Day 4, Day 5) |
+| React components created | 10+ |
+| Custom hooks written | 6 |
+| Service classes written | 2 (`ApiService`, `WebSocketService`) |
+| Documentation files created | 8 |
+| Successful production builds | 2 (`npm run build`) |
+| Bundle size (Day 5, gzipped) | ~53 KB JS |
+| CSS design system | 1 shared token system |
+| Bugs identified and fixed | 7 (see `code-review.md`) |
 
-## 📈 Performance Achievements
+---
 
-### Lighthouse Scores
-- **Performance**: 92/100
-- **Accessibility**: 95/100
-- **Best Practices**: 90/100
-- **SEO**: 88/100
+## 📈 Performance Metrics (Day 5 Build)
 
-### Bundle Analysis
-- **Total Bundle Size**: 245KB (gzipped)
-- **JavaScript**: 180KB
-- **CSS**: 45KB
-- **Images**: 20KB
+| Metric | Value |
+|--------|-------|
+| Build output JS | 166 KB |
+| Gzipped JS | 53 KB |
+| Build output CSS | 4.81 KB |
+| Gzipped CSS | 1.48 KB |
+| Vite build time | ~933ms |
+| Total modules transformed | 48 |
 
-### Runtime Performance
-- **First Contentful Paint**: 1.2s
-- **Largest Contentful Paint**: 2.1s
-- **Cumulative Layout Shift**: 0.05
-- **Time to Interactive**: 2.8s
+---
 
-## 🎓 Learning Outcomes
+## 🎓 Key Learnings
 
-### Technical Skills Gained
-- **Git Mastery**: Advanced branching, merging, conflict resolution
-- **CSS Expertise**: Flexbox, Grid, animations, responsive design
-- **JavaScript Proficiency**: ES6+, modules, async/await, performance
-- **React Mastery**: Hooks, state management, optimization
-- **API Integration**: REST, WebSocket, error handling, caching
+### What Clicked
+- **CSS Variables** as design tokens — one change cascades everywhere; made theme consistency trivial
+- **`useReducer` for async states** — explicit state machine eliminates boolean-flag soup (`isLoading && !isError && data !== null`)
+- **Exponential backoff with jitter** — without jitter, all retry clients fire simultaneously on server recovery (thundering herd)
+- **Mock data fallback pattern** — decouples frontend from backend availability; enables parallel development
+- **`.jsx` extension in Vite** — Vite's `esbuild` parser only applies JSX transform to `.jsx` files by default
 
-### Soft Skills Developed
-- **Collaboration**: Code reviews, pair programming, knowledge sharing
-- **Communication**: Technical writing, documentation, presentations
-- **Problem Solving**: Debugging, optimization, troubleshooting
-- **Time Management**: Sprint planning, task prioritization
-- **Quality Focus**: Testing, code review, continuous improvement
+### Unexpected Challenges
+- **`DataContext.js` parse failure** — learned that file extension matters to Vite's transformer
+- **Intermediate viewport squish (768–1024px)** — collapsing at `768px` wasn't enough; `1024px` was the right breakpoint
+- **`min-width` blocking mobile scale** — explicit minimum widths fight browser's natural layout flexibility
+- **`timeout` in fetch config** — native `fetch` silently ignores unknown config keys; `AbortController` is the actual mechanism
+
+---
 
 ## 🔍 Challenges Overcome
 
-### Technical Challenges
-1. **WebSocket Reconnection**: Implemented robust reconnection logic
-2. **Performance Optimization**: Achieved 92/100 Lighthouse score
-3. **State Management**: Complex state with useReducer and Context
-4. **Cross-Browser Compatibility**: Ensured consistent experience
-5. **Real-Time Data**: Synchronized multiple data sources
+| Challenge | Resolution |
+|-----------|-----------|
+| JSX file parse error in Vite | Renamed `DataContext.js` → `DataContext.jsx` |
+| Mobile layout squishing at tablet widths | Moved breakpoint from `768px` to `1024px` |
+| Horizontal chart scroll on phones | Removed `min-width` from SVG viewport, set `width: 100%` |
+| SVG donut arc calculation | Used polar-to-Cartesian conversion with `Math.cos`/`Math.sin` and `largeArcFlag` |
+| Missing hook files breaking Day 5 build | Created `useApiService.js` and `useWebSocket.js` |
+| API calls hitting Vite dev server | Set `ApiService` base URL to `''` so fallback mock activates |
 
-### Process Challenges
-1. **Git Workflow**: Established effective collaboration process
-2. **Code Review**: Implemented thorough review process
-3. **Documentation**: Created comprehensive documentation
-4. **Testing**: Achieved 85% test coverage
-5. **Agile Process**: Implemented effective sprint planning
-
-## 📚 Documentation Created
-
-### Technical Documentation
-- **System Architecture**: Comprehensive system design
-- **API Documentation**: Detailed endpoint documentation
-- **Component Library**: Reusable component documentation
-- **Setup Guides**: Step-by-step installation instructions
-- **Troubleshooting**: Common issues and solutions
-
-### Process Documentation
-- **Git Workflow**: Collaboration and branching strategy
-- **Code Review Process**: Quality assurance procedures
-- **Sprint Planning**: Agile methodology implementation
-- **Documentation Standards**: Writing and formatting guidelines
-- **Best Practices**: Development and deployment practices
+---
 
 ## 🎯 Week 2 Preparation
 
-### Backend Development Focus
-- **Node.js Mastery**: Advanced server-side development
-- **Database Integration**: MongoDB and PostgreSQL
-- **API Development**: RESTful API design and implementation
-- **Authentication**: JWT and OAuth2 implementation
-- **Testing**: Backend testing strategies and tools
+### Focus Areas
+- **Node.js + Express.js** — Build the actual backend API that Day 5's services are designed to call
+- **MongoDB** — Implement the data layer implied by the API documentation
+- **JWT Authentication** — Implement the `Authorization: Bearer` header flow documented in `api-documentation.md`
+- **Socket.io** — Replace the browser WebSocket client with a full-duplex server
 
-### Skills to Develop
-- **Server Architecture**: Microservices and monolithic design
-- **Database Design**: Schema design and optimization
-- **API Security**: Authentication, authorization, rate limiting
-- **Performance**: Caching, optimization, monitoring
-- **DevOps**: Deployment, monitoring, scaling
+### Carry-Forward Items from Week 1
+- Fix `innerHTML` XSS surface in Day 3 `showError()`
+- Remove no-op `timeout` field from `ApiService` fetch config
+- Add ESLint config to enforce no-`console.log` in production builds
+- Write Vitest unit tests for `ApiService.checkRateLimit()` and retry logic
 
-## 🔄 Continuous Improvement
-
-### Process Improvements
-- **Code Review**: Implement automated code quality checks
-- **Testing**: Increase test coverage to 90%
-- **Documentation**: Automate documentation generation
-- **Performance**: Implement continuous performance monitoring
-- **Security**: Add security scanning to CI/CD pipeline
-
-### Skill Development
-- **Backend Development**: Focus on server-side technologies
-- **Database Management**: Advanced database design and optimization
-- **API Design**: RESTful API best practices
-- **Security**: Authentication and authorization
-- **DevOps**: Deployment and monitoring
-
-## 📊 Success Metrics
-
-### Quantitative Achievements
-- **Code Quality**: 98/100 linting score
-- **Performance**: 92/100 Lighthouse score
-- **Test Coverage**: 85% code coverage
-- **Documentation**: 90% documentation coverage
-- **Collaboration**: 12 successful PRs merged
-
-### Qualitative Achievements
-- **Problem Solving**: Successfully resolved complex technical challenges
-- **Learning**: Mastered advanced frontend technologies
-- **Collaboration**: Effective team communication and knowledge sharing
-- **Quality**: High standards for code and documentation
-- **Innovation**: Implemented creative solutions to technical problems
+---
 
 ## 🎉 Week 1 Conclusion
 
-Week 1 has been a tremendous success, establishing a solid foundation for advanced full-stack development. The combination of technical skills, process improvements, and collaborative practices has created a strong base for the remaining weeks of the training program.
+Week 1 built a full arc from static markup to a live, production-buildable telemetry dashboard. The most important outcomes are:
 
-### Key Takeaways
-1. **Foundation is Critical**: Solid frontend skills enable advanced backend development
-2. **Process Matters**: Effective workflows improve productivity and quality
-3. **Documentation is Essential**: Comprehensive documentation enables collaboration
-4. **Testing is Non-Negotiable**: Quality assurance prevents issues and enables confidence
-5. **Continuous Learning**: Technology evolves rapidly, requiring ongoing skill development
+1. **Architecture discipline** — Each day's code is isolated in its own Vite project. Services are pure classes. Hooks adapt them to React. Components only render. This separation will scale to a backend.
 
-### Next Steps
-- **Week 2**: Focus on backend development and database integration
-- **Week 3**: Implement DevOps practices and mobile development
-- **Week 4**: Integrate AI capabilities and complete capstone project
+2. **Graceful degradation** — Every data fetch has a mock fallback. The app never shows a blank state. This pattern transfers directly to backend integration — replace mocks with real API calls when the backend is ready.
 
-The foundation established in Week 1 will support the advanced topics in the remaining weeks, creating a comprehensive full-stack development skill set.
+3. **Documentation as code** — Day 6 docs were written with the same care as code. The UML diagrams, API schemas, and sprint retrospectives serve as the handoff to Week 2.
