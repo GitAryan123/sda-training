@@ -1,15 +1,18 @@
+'use strict';
+
 const { Pool } = require('pg');
-const { logger } = require('../middleware/errorHandler');
 
-class PostgreSQLConnection {
-  constructor() {
-    this.pool = null;
-    this.isConnected = false;
-  }
+/**
+ * PostgreSQL Connection Factory
+ * Configures and manages connection pool status using closures instead of classes.
+ */
+function createPostgreSQLConnection() {
+  let pool = null;
+  let isConnected = false;
 
-  async connect() {
+  const connect = async () => {
     try {
-      this.pool = new Pool({
+      pool = new Pool({
         user: process.env.POSTGRES_USER || 'postgres',
         host: process.env.POSTGRES_HOST || 'localhost',
         database: process.env.POSTGRES_DB || 'sda_training',
@@ -20,59 +23,73 @@ class PostgreSQLConnection {
         connectionTimeoutMillis: 2000,
       });
 
-      // Test connection
-      const client = await this.pool.connect();
+      // Assert connection by checking out a client and running a simple query
+      const client = await pool.connect();
       await client.query('SELECT NOW()');
       client.release();
 
-      this.isConnected = true;
-      logger.info('PostgreSQL connected successfully');
+      isConnected = true;
+      console.log('[PostgreSQL] Connected successfully');
 
-      // Handle pool errors
-      this.pool.on('error', (err) => {
-        logger.error('PostgreSQL pool error:', err);
-        this.isConnected = false;
+      // Hook error handler on the pool instance
+      pool.on('error', (err) => {
+        console.error('[PostgreSQL] Connection pool error:', err);
+        isConnected = false;
       });
 
     } catch (error) {
-      logger.error('PostgreSQL connection failed:', error);
+      console.error('[PostgreSQL] Connection failed:', error);
       throw error;
     }
-  }
+  };
 
-  async disconnect() {
-    if (this.pool) {
-      await this.pool.end();
-      this.isConnected = false;
-      logger.info('PostgreSQL disconnected');
+  const disconnect = async () => {
+    if (pool) {
+      await pool.end();
+      isConnected = false;
+      console.log('[PostgreSQL] Connection pool closed');
     }
-  }
+  };
 
-  async query(text, params) {
+  const query = async (text, params) => {
+    if (!pool) {
+      throw new Error('[PostgreSQL] Connection pool is not initialized. Call connect() first.');
+    }
     const start = Date.now();
     try {
-      const result = await this.pool.query(text, params);
+      const result = await pool.query(text, params);
       const duration = Date.now() - start;
-      logger.debug('Query executed', { text, duration, rows: result.rowCount });
+      // Optional logging for query timings if needed
       return result;
     } catch (error) {
-      logger.error('Query failed', { text, error: error.message });
+      console.error('[PostgreSQL] Query execution failed:', { text, error: error.message });
       throw error;
     }
-  }
+  };
 
-  async getClient() {
-    return await this.pool.connect();
-  }
+  const getClient = async () => {
+    if (!pool) {
+      throw new Error('[PostgreSQL] Connection pool is not initialized. Call connect() first.');
+    }
+    return await pool.connect();
+  };
 
-  getConnectionStatus() {
+  const getConnectionStatus = () => {
     return {
-      isConnected: this.isConnected,
-      totalCount: this.pool?.totalCount || 0,
-      idleCount: this.pool?.idleCount || 0,
-      waitingCount: this.pool?.waitingCount || 0
+      isConnected,
+      totalCount: pool ? pool.totalCount : 0,
+      idleCount: pool ? pool.idleCount : 0,
+      waitingCount: pool ? pool.waitingCount : 0
     };
-  }
+  };
+
+  return {
+    connect,
+    disconnect,
+    query,
+    getClient,
+    getConnectionStatus
+  };
 }
 
-module.exports = new PostgreSQLConnection();
+module.exports = createPostgreSQLConnection();

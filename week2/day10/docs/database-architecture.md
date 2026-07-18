@@ -1,141 +1,101 @@
-# Database Architecture Guide
+# Hybrid Database Architecture Guide
 
-## Overview
-This project uses a hybrid database approach:
+This document outlines the structural data layout, schema choices, indexing strategies, and connection designs implemented for Day 10.
 
-- MongoDB for flexible, document-oriented data.
-- PostgreSQL for relational data with strong consistency and transactional safety.
+---
 
-This architecture allows each workload to use the storage model that fits it best instead of forcing one database to solve every problem.
+## 🏛️ Hybrid Database Design
 
-## Design Goals
-- Keep core business transactions consistent and auditable.
-- Support fast iteration for features with evolving data shape.
-- Maintain predictable performance under read and write growth.
-- Reduce operational risk by applying clear ownership boundaries per datastore.
+We implement a **polyglot persistence** architecture to leverage the distinct advantages of NoSQL and Relational database systems:
 
-## Hybrid Database Strategy
+```mermaid
+graph TD
+    Client["Client Request"] --> API["Express App Router"]
+    API -->|Flexible, nesting| Mongo["MongoDB (User Model)"]
+    API -->|Strict schema, relational| PG["PostgreSQL (Product, Order, Item, Review)"]
+```
 
-### When To Use MongoDB
-Use MongoDB when:
+### 1. MongoDB (User & Profile Data)
+- **Role**: Handles flexible user-centric entities.
+- **Reasoning**: User profiles often contain variable nested configurations (e.g., UI preferences, notification options, variable social links) that benefit from NoSQL document nesting. Avoids high-cost table joins for sparse profile fields.
+- **Engine**: Mongoose ODM.
 
-- Data structure changes frequently.
-- You need nested or semi-structured documents.
-- Reads benefit from denormalized data in a single document.
-- You are storing event payloads, logs, or user-generated metadata.
+### 2. PostgreSQL (Catalog & Transactional Data)
+- **Role**: Stores products catalog, orders ledger, order items, and user reviews.
+- **Reasoning**: Orders and checkout pipelines require strict schema validation, foreign key integrity constraints, check constraints (e.g., `stock >= 0`, `price >= 0`), and ACID transactions to prevent stock overselling and double-charging.
+- **Engine**: Connection pool via `pg` driver.
 
-Typical examples:
+---
 
-- Activity feeds
-- Product catalog metadata
-- User preferences and settings
+## 🚦 Closure-Based Connection Factories
 
-### When To Use PostgreSQL
-Use PostgreSQL when:
+Following the factory function guideline, both database connect modules have been restructured from class constructs to closure functions:
 
-- Data has strong relationships and constraints.
-- You need ACID transactions across multiple tables.
-- Reporting requires joins, aggregation, and strong integrity.
-- You need strict validation and referential consistency.
+```javascript
+// database/postgresql.js
+function createPostgreSQLConnection() {
+  let pool = null;
+  let isConnected = false;
 
-Typical examples:
+  const connect = async () => { ... };
+  const query = async (text, params) => { ... };
 
-- Users and authentication records
-- Orders, payments, and inventory transactions
-- Permission and role mappings
+  return { connect, query, getConnectionStatus, ... };
+}
+```
 
-### Decision Matrix
-| Requirement | MongoDB | PostgreSQL |
-|---|---|---|
-| Flexible schema | Excellent | Moderate |
-| Complex joins | Limited | Excellent |
-| Transaction-heavy workflows | Good (limited scope) | Excellent |
-| Horizontal write scaling | Strong | Good |
-| Strict relational integrity | Limited | Excellent |
+### Key Technical Advantages:
+1. **Encapsulated State**: The underlying connection instances (Mongoose context and PG pool) are enclosed inside the scope of the factory function, making it impossible to override them externally.
+2. **Simplified Context binding**: Eliminates JavaScript `this` binding issues when passing DB client helper methods to routers or services.
 
-## Data Consistency Model
+---
 
-### Strong Consistency
-Use PostgreSQL for workflows where correctness must be immediate:
+## 🗄️ Database Schemas & Relations (PostgreSQL)
 
-- Payment captured and order confirmed
-- Stock decrement after checkout
-- User role or permission changes
+Our relational schema ensures data integrity using cascading constraints and automatic timestamps:
 
-### Eventual Consistency
-Use asynchronous synchronization between databases for derived or non-critical views.
+```
+┌──────────────────┐          ┌──────────────────┐
+│     products     │◄─────────┤   order_items    │
+├──────────────────┤          ├──────────────────┤
+│ id (PK)          │          │ id (PK)          │
+│ name             │          │ order_id (FK) ───┼──┐
+│ price (>=0)      │          │ product_id (FK)  │  │
+│ stock (>=0)      │          │ price (>=0)      │  │
+└────────┬─────────┘          │ quantity (>0)    │  │
+         │                    └──────────────────┘  │
+         │                                          │
+         │                    ┌──────────────────┐  │
+         │                    │      orders      │◄─┘
+         │                    ├──────────────────┤
+         │                    │ id (PK)          │
+         │                    │ customer_id      │
+         │                    │ status (CHECK)   │
+         │                    └──────────────────┘
+         │                    ┌──────────────────┐
+         └───────────────────►│     reviews      │
+                              ├──────────────────┤
+                              │ id (PK)          │
+                              │ product_id (FK)  │
+                              │ rating (1-5)     │
+                              └──────────────────┘
+```
 
-Recommended pattern:
+### Reference Integrity rules:
+- **Cascading deletes**: If a product is deleted, all its associated `order_items` and `reviews` are automatically removed (`ON DELETE CASCADE`) to prevent orphaned foreign keys.
+- **Validation Constraints**: Prices must be non-negative (`price >= 0`), stocks must be non-negative (`stock >= 0`), order quantities must be strictly positive (`quantity > 0`), and reviews rating must fall within `[1, 5]`.
 
-1. Write source-of-truth records to PostgreSQL.
-2. Publish an event describing the change.
-3. Update MongoDB read models asynchronously.
-4. Make handlers idempotent to tolerate retries.
+---
 
-## MongoDB Best Practices
+## ⚡ Indexing Strategy
 
-### Schema Design
-- Embed child objects when they are small and always read together.
-- Use references when child data grows independently or is reused.
-- Add explicit version fields for documents with evolving schema.
+### 1. MongoDB (User indexes)
+- `email: 1` (Unique): Optimizes authentication queries.
+- `role: 1`: Speeds up administrative searches.
+- `isActive: 1`: Filters out inactive profiles fast.
+- `createdAt: -1`: Optimizes page sorting.
 
-### Indexing
-- Start with single-field indexes for high-selectivity filters.
-- Use compound indexes that match query filter order.
-- Add text indexes only for search-focused fields.
-- Review index usage regularly and remove unused indexes.
-
-### Query Optimization
-- Use projection to return only required fields.
-- Prefer bounded queries and pagination over full scans.
-- Use aggregation pipelines carefully; keep stages selective early.
-
-### Connection Management
-- Use a shared connection pool per service instance.
-- Configure pool size based on service concurrency.
-- Track connection errors, latency, and slow queries.
-
-## PostgreSQL Best Practices
-
-### Schema Design
-- Normalize transactional data to reduce anomalies.
-- Use explicit foreign keys for referential integrity.
-- Keep naming consistent and migration-driven.
-
-### Indexing
-- Use B-tree indexes for most equality and range queries.
-- Use GIN for JSONB and full-text search cases.
-- Add partial indexes for frequently filtered subsets.
-
-### Query Optimization
-- Use `EXPLAIN ANALYZE` for expensive queries.
-- Avoid `SELECT *` in high-traffic paths.
-- Verify index usage and watch for sequential scans on large tables.
-
-### Connection Management
-- Use a pooler strategy suitable for your runtime (application pool or PgBouncer).
-- Set statement and idle timeouts.
-- Monitor lock contention and long-running transactions.
-
-### Data Integrity
-- Enforce `NOT NULL`, `UNIQUE`, `CHECK`, and foreign key constraints.
-- Use transactions for multi-step state changes.
-- Reserve triggers for cross-cutting enforcement that cannot be handled in application code.
-
-## Cross-Database Operational Practices
-- Define one source of truth per entity.
-- Use consistent ID strategy across MongoDB and PostgreSQL.
-- Add tracing metadata to sync events for debugging.
-- Create backup and restore procedures for both datastores.
-- Document retention and archival policies by data type.
-
-## Security And Compliance
-- Encrypt data in transit and at rest.
-- Use least-privilege database users for each service.
-- Rotate credentials and store secrets outside source control.
-- Log access to sensitive records where required.
-
-## Suggested Next Improvements
-- Add an ER diagram for PostgreSQL entities.
-- Add a MongoDB collection relationship map.
-- Define concrete SLOs for query latency and error rate.
+### 2. PostgreSQL (Relational indexes)
+- `idx_products_category` & `idx_products_price`: For rapid storefront filter sorting.
+- `idx_orders_customer` & `idx_orders_status`: For customer order lists.
+- `idx_order_items_order` & `idx_reviews_product`: Speeds up relational joins on foreign keys during queries.
