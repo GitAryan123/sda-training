@@ -1,169 +1,174 @@
 # System Architecture Documentation
 
+> **Project:** Apex Training Dashboard — SDA Week 1  
+> **Version:** 1.0.0  
+> **Last Updated:** July 2026  
+
+---
+
 ## Overview
-The Advanced Dashboard is a full-stack web application built with modern technologies to provide real-time data visualization and analytics.
+
+The Apex Training Dashboard is a modular, client-side React application designed for real-time data visualization and telemetry monitoring. Built entirely in the browser using Vite + React 18, it demonstrates the full spectrum of Week 1 skills — from raw HTML/CSS to advanced React hooks, WebSocket integration, and production-ready API service layers.
+
+---
 
 ## Architecture Principles
-- **Modularity**: Component-based architecture with clear separation of concerns
-- **Scalability**: Horizontal scaling capabilities with microservices
-- **Performance**: Optimized for speed and efficiency
-- **Security**: Secure data handling and authentication
-- **Maintainability**: Clean code and comprehensive documentation
+
+| Principle | Implementation |
+|-----------|----------------|
+| **Modularity** | Each day's codebase is isolated in its own Vite project. Cross-day patterns are shared conceptually, not via import chains |
+| **Separation of Concerns** | Services (`ApiService`, `WebSocketService`) are purely functional classes. Hooks adapt them to React. Components only render. |
+| **Performance-First** | `React.memo`, `useMemo`, `useCallback` applied where data recalculates on every render |
+| **Graceful Degradation** | All API/WS failures fall back to deterministic mock data so the dashboard never shows blank states |
+| **Documentation-Driven** | Every architectural decision is recorded before code is written |
+
+---
 
 ## Technology Stack
 
-### Frontend
-- **React 18**: Component-based UI library
-- **JavaScript ES6+**: Modern JavaScript features
-- **CSS3**: Advanced styling with custom properties
-- **Chart.js**: Data visualization library
-- **WebSocket**: Real-time data communication
+### Frontend (Days 2–5)
+| Layer | Technology | Purpose |
+|-------|-----------|---------|
+| UI Framework | **React 18** | Component tree, hooks, concurrent rendering |
+| Build Tool | **Vite 4** | HMR dev server, ESM bundling |
+| Language | **JavaScript ES2022+** | `?.`, `??`, async/await, modules |
+| Styling | **Vanilla CSS + CSS Variables** | Themeable design tokens, no Tailwind dependency |
+| Charts | **Native SVG** | Zero-dependency vector chart rendering |
+| Real-Time | **WebSocket API** | Browser-native push connection |
+| Fonts | **Google Fonts (Outfit)** | Premium, clean sans-serif typeface |
 
-### Backend
-- **Node.js**: JavaScript runtime environment
-- **Express.js**: Web application framework
-- **MongoDB**: NoSQL database for flexible data storage
-- **Redis**: In-memory data store for caching
-- **Socket.io**: WebSocket implementation
+### Data Layer (Day 5)
+| Service | Role |
+|---------|------|
+| `ApiService` | REST cache, retry backoff, rate limiter |
+| `WebSocketService` | Connection lifecycle, heartbeat, offline queue |
+| `useRealTimeData` | Orchestrates REST + WS, exposes React state |
+| Mock fallback | Deterministic random data when backend is unavailable |
 
-### DevOps
-- **Docker**: Containerization platform
-- **Kubernetes**: Container orchestration
-- **GitHub Actions**: CI/CD pipeline
-- **AWS**: Cloud infrastructure
+---
 
-## System Components
+## Component Architecture
 
-### Frontend Components
 ```
-src/
-├── components/          # Reusable UI components
-│   ├── Dashboard.jsx   # Main dashboard component
-│   ├── MetricsCard.jsx # Metric display cards
-│   └── ChartContainer.jsx # Chart wrapper
-├── hooks/              # Custom React hooks
-│   ├── useDataFetching.js # Data fetching logic
-│   └── useWebSocket.js # WebSocket management
-├── services/           # API and external services
-│   ├── ApiService.js  # REST API client
-│   └── WebSocketService.js # WebSocket client
-└── utils/              # Utility functions
-    ├── helpers.js      # General helper functions
-    └── constants.js    # Application constants
+week1/day4/code/src/
+├── components/
+│   ├── Dashboard.jsx          ← Layout shell, sidebar nav, main wrapper
+│   ├── DashboardHeader.jsx    ← Filter controls (date, status, search)
+│   ├── MetricsGrid.jsx        ← 4-card KPI display
+│   ├── ChartSection.jsx       ← Tab-switching SVG chart area
+│   └── PerformanceLog.jsx     ← Web vitals panel
+├── hooks/
+│   ├── useDataFetching.js     ← useReducer-based fetch state machine
+│   ├── usePerformance.js      ← PerformanceObserver + Navigation Timing
+│   └── useFilters.js          ← Filter state + derived filtered datasets
+├── context/
+│   └── DataContext.jsx        ← React Context for cached telemetry data
+└── services/
+    └── (API layer in Day 5)
+
+week1/day5/code/src/
+├── services/
+│   ├── ApiService.js          ← Fetch with retry, cache Map, rate limiter
+│   └── WebSocketService.js    ← WS reconnect, heartbeat, message queue
+├── hooks/
+│   ├── useApiService.js       ← Singleton ApiService React hook
+│   ├── useWebSocket.js        ← Shared WS instance by URL key
+│   ├── useRealTimeData.js     ← Unified REST+WS data sync hook
+│   └── usePerformance.js      ← Web Vitals hook
+└── components/
+    ├── RealTimeDashboard.jsx  ← Orchestrates all live feeds
+    ├── MetricsCard.jsx        ← Memoized KPI card
+    ├── ChartContainer.jsx     ← SVG Line/Bar/Donut renderer
+    └── ConnectionStatus.jsx   ← WS badge with tooltip + reconnect
 ```
 
-### Backend Services
-```
-server/
-├── routes/             # API route handlers
-│   ├── users.js       # User management
-│   ├── revenue.js     # Revenue data
-│   └── orders.js      # Order processing
-├── models/             # Database models
-│   ├── User.js        # User schema
-│   └── Metric.js       # Metric schema
-├── middleware/         # Express middleware
-│   ├── auth.js        # Authentication
-│   └── validation.js  # Input validation
-└── services/          # Business logic
-    ├── DataService.js # Data processing
-    └── CacheService.js # Caching logic
-```
+---
 
 ## Data Flow
 
-### 1. User Interaction
-- User interacts with dashboard interface
-- Frontend components handle user input
-- State management updates component state
+### REST Request Lifecycle
+```
+User Action
+    ↓
+useRealTimeData(endpoint)
+    ↓
+ApiService.get(endpoint)
+    ↓
+checkRateLimit() → blocked? throw RateLimitError
+    ↓
+cache.has(key) && !expired? → return cached data
+    ↓
+fetchWithRetry(url, config, attempt=1)
+    ↓
+  fetch fails? → shouldRetry? → delay(retryDelay × 2^attempt ± jitter)
+    ↓
+Success → cache.set(key, { data, timestamp }) → return data
+    ↓
+Component state update → re-render
+```
 
-### 2. Data Fetching
-- API service makes HTTP requests to backend
-- Backend processes requests and queries database
-- Response data is cached and returned to frontend
+### WebSocket Lifecycle
+```
+enableRealTime = true
+    ↓
+WebSocketService.connect()
+    ↓
+ws.onopen → startHeartbeat() → processMessageQueue() → notify 'connected'
+    ↓
+ws.onmessage → handleMessage() → notifySubscribers('message', data)
+    ↓
+useRealTimeData: 'dataUpdate' events with matching endpoint → setData()
+    ↓
+ws.onclose (dirty) → stopHeartbeat() → handleReconnect()
+    ↓
+reconnectAttempts++ → delay(interval × 2^n ± jitter) → connect()
+```
 
-### 3. Real-Time Updates
-- WebSocket connection established
-- Backend pushes data updates to frontend
-- Frontend components update in real-time
+---
 
-### 4. Data Visualization
-- Chart components receive data updates
-- Visualization libraries render charts
-- User sees updated data in real-time
+## Security Architecture
 
-## Security Considerations
+| Area | Approach |
+|------|---------|
+| **Rate Limiting** | Client-side sliding window (10 req / 5s) to prevent hammering |
+| **Retry Safety** | AbortController timeouts prevent hanging requests |
+| **Input Sanitization** | All WebSocket JSON parsed inside try/catch |
+| **Error Leakage** | Catch blocks log to console only; UI shows generic messages |
+| **No Secrets** | No API keys or credentials in frontend source |
 
-### Authentication
-- JWT tokens for user authentication
-- Role-based access control (RBAC)
-- Secure session management
-
-### Data Protection
-- Input validation and sanitization
-- SQL injection prevention
-- XSS protection
-- CSRF protection
-
-### API Security
-- Rate limiting and throttling
-- Request validation
-- Error handling without information leakage
+---
 
 ## Performance Optimization
 
-### Frontend
-- Code splitting and lazy loading
-- Component memoization
-- Efficient state management
-- Bundle optimization
+| Optimization | Location | Benefit |
+|--------------|----------|---------|
+| `React.memo` | `MetricsCard` | Skips re-render when props unchanged |
+| `useMemo` | Chart path computation | Recalculates only when dataset changes |
+| `useCallback` | `refresh`, `getLastUpdate` | Stable references for `useEffect` deps |
+| Cache Map TTL | `ApiService` | Eliminates duplicate network requests |
+| Simulated delta updates | `useRealTimeData` | Only updates changed values, not full re-fetch |
+| SVG `viewBox` | `ChartContainer` | Scales natively — no canvas redraw |
 
-### Backend
-- Database query optimization
-- Caching strategies
-- Connection pooling
-- Load balancing
-
-### Infrastructure
-- CDN for static assets
-- Database indexing
-- Caching layers
-- Monitoring and alerting
+---
 
 ## Deployment Architecture
 
-### Development Environment
-- Local development with Docker Compose
-- Hot reloading for frontend
-- Database seeding and testing
+| Environment | Setup |
+|-------------|-------|
+| **Development** | `npm run dev` — Vite HMR on `localhost:5173` |
+| **Build Check** | `npm run build` — Vite bundles to `dist/` with tree-shaking |
+| **Preview** | `npm run preview` — Serve production bundle locally |
+| **CI (proposed)** | GitHub Actions → `npm ci && npm run build` on PR |
+| **Production (proposed)** | Static hosting (Netlify / Vercel / S3+CloudFront) |
 
-### Staging Environment
-- Production-like environment
-- Automated testing
-- Performance monitoring
+---
 
-### Production Environment
-- Kubernetes cluster
-- Load balancers
-- Database replication
-- Monitoring and logging
+## Monitoring Strategy
 
-## Monitoring and Logging
-
-### Application Monitoring
-- Performance metrics
-- Error tracking
-- User analytics
-- System health checks
-
-### Infrastructure Monitoring
-- Server metrics
-- Database performance
-- Network monitoring
-- Resource utilization
-
-### Logging
-- Structured logging with Winston
-- Log aggregation and analysis
-- Error tracking and alerting
-- Audit trails
+| Signal | Tool |
+|--------|------|
+| Web Vitals (FP, FCP, LCP) | `usePerformance` hook via PerformanceObserver API |
+| Network Timing | Navigation Timing API in `usePerformance` |
+| WS Health | Heartbeat ping/pong every 30s in `WebSocketService` |
+| Error Tracking | Console grouped logs with `%c` styling for severity |
+| Reconnect Telemetry | `reconnectAttempts` counter exposed via `getConnectionState()` |

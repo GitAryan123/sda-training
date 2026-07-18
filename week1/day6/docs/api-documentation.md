@@ -1,225 +1,232 @@
 # API Documentation
 
-## Base URL
-```
-https://api.dashboard.com/v1
-```
+> **Project:** Apex Telemetry Dashboard — Day 5  
+> **Base URL (Dev):** `http://localhost:5173`  
+> **WebSocket:** `ws://localhost:5173/ws`  
+> **Version:** v1.0  
+
+---
+
+## Table of Contents
+- [Authentication](#authentication)
+- [Data Endpoints](#data-endpoints)
+  - [GET /revenue](#get-revenue)
+  - [GET /users](#get-users)
+  - [GET /orders](#get-orders)
+- [Error Responses](#error-responses)
+- [Rate Limiting](#rate-limiting)
+- [WebSocket Events](#websocket-events)
+- [Caching Behaviour](#caching-behaviour)
+
+---
 
 ## Authentication
-All API requests require authentication via JWT token in the Authorization header:
-```
+
+> **Note:** The current implementation is frontend-only with simulated data. When a backend is added, all requests should include:
+
+```http
 Authorization: Bearer <jwt_token>
+Content-Type: application/json
 ```
 
-## Endpoints
+---
 
-### Users
+## Data Endpoints
 
-#### GET /users
-Retrieve all users with pagination and filtering.
+### GET /revenue
 
-**Parameters:**
-- `page` (integer, optional): Page number (default: 1)
-- `limit` (integer, optional): Items per page (default: 10)
-- `search` (string, optional): Search query
-- `sort` (string, optional): Sort field (default: 'createdAt')
-- `order` (string, optional): Sort order ('asc' or 'desc')
+Retrieve revenue telemetry data for chart visualization.
 
-**Response:**
+**Query Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `startDate` | ISO8601 string | No | 7 days ago | Time range start |
+| `endDate` | ISO8601 string | No | now | Time range end |
+| `granularity` | `daily` \| `weekly` \| `monthly` | No | `daily` | Bucket resolution |
+
+**Success Response `200 OK`:**
 ```json
 {
-  "success": true,
-  "data": {
-    "users": [
-      {
-        "id": "user_123",
-        "name": "John Doe",
-        "email": "john@example.com",
-        "role": "admin",
-        "createdAt": "2024-01-01T00:00:00Z",
-        "updatedAt": "2024-01-01T00:00:00Z"
-      }
-    ],
-    "pagination": {
-      "page": 1,
-      "limit": 10,
-      "total": 100,
-      "pages": 10
-    }
-  }
+  "total": 47250,
+  "change": 8.4,
+  "labels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  "values": [5200, 6800, 4900, 7100, 8200, 9100, 5950]
 }
 ```
 
-#### POST /users
-Create a new user.
+| Field | Type | Description |
+|-------|------|-------------|
+| `total` | Number | Aggregate revenue for period |
+| `change` | Number | % change vs prior period |
+| `labels` | String[] | X-axis labels for chart |
+| `values` | Number[] | Revenue per bucket |
 
-**Request Body:**
+---
+
+### GET /users
+
+Retrieve user registration telemetry.
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Default | Description |
+|-----------|------|----------|---------|-------------|
+| `page` | Integer | No | 1 | Page number |
+| `limit` | Integer | No | 10 | Results per page |
+| `search` | String | No | - | Filter by name/email |
+
+**Success Response `200 OK`:**
 ```json
 {
-  "name": "Jane Doe",
-  "email": "jane@example.com",
-  "role": "user",
-  "password": "securepassword"
+  "total": 1842,
+  "change": 12.1,
+  "labels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  "values": [210, 185, 250, 300, 275, 190, 432]
 }
 ```
 
-**Response:**
+---
+
+### GET /orders
+
+Retrieve order processing telemetry with status breakdown.
+
+**Query Parameters:**
+
+| Parameter | Type | Required | Description |
+|-----------|------|----------|-------------|
+| `status` | `completed` \| `pending` \| `cancelled` | No | Filter by status |
+| `dateRange` | String | No | Date range filter |
+
+**Success Response `200 OK`:**
 ```json
 {
-  "success": true,
-  "data": {
-    "id": "user_456",
-    "name": "Jane Doe",
-    "email": "jane@example.com",
-    "role": "user",
-    "createdAt": "2024-01-01T00:00:00Z"
-  }
+  "total": 342,
+  "change": -1.8,
+  "labels": ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
+  "values": [42, 38, 55, 60, 48, 62, 37]
 }
 ```
 
-### Revenue
-
-#### GET /revenue
-Retrieve revenue data with time range filtering.
-
-**Parameters:**
-- `startDate` (string, required): Start date in ISO format
-- `endDate` (string, required): End date in ISO format
-- `granularity` (string, optional): Data granularity ('daily', 'weekly', 'monthly')
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "total": 45678.90,
-    "change": 12.5,
-    "trend": "up",
-    "data": [
-      {
-        "date": "2024-01-01",
-        "revenue": 1234.56,
-        "transactions": 45
-      }
-    ]
-  }
-}
-```
-
-### Orders
-
-#### GET /orders
-Retrieve order data with filtering and sorting.
-
-**Parameters:**
-- `status` (string, optional): Order status filter
-- `dateRange` (string, optional): Date range filter
-- `sort` (string, optional): Sort field
-
-**Response:**
-```json
-{
-  "success": true,
-  "data": {
-    "orders": [
-      {
-        "id": "order_123",
-        "customerId": "customer_456",
-        "total": 99.99,
-        "status": "completed",
-        "createdAt": "2024-01-01T00:00:00Z"
-      }
-    ],
-    "summary": {
-      "total": 100,
-      "completed": 85,
-      "pending": 10,
-      "cancelled": 5
-    }
-  }
-}
-```
+---
 
 ## Error Responses
 
-### 400 Bad Request
+All errors follow a consistent envelope format:
+
 ```json
 {
   "success": false,
   "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Invalid input parameters",
-    "details": [
-      {
-        "field": "email",
-        "message": "Invalid email format"
-      }
-    ]
+    "code": "ERROR_CODE",
+    "message": "Human-readable description",
+    "details": []
   }
 }
 ```
 
-### 401 Unauthorized
-```json
-{
-  "success": false,
-  "error": {
-    "code": "UNAUTHORIZED",
-    "message": "Authentication required"
-  }
-}
-```
+### HTTP Status Codes
 
-### 404 Not Found
-```json
-{
-  "success": false,
-  "error": {
-    "code": "NOT_FOUND",
-    "message": "Resource not found"
-  }
-}
-```
+| Status | Code | When |
+|--------|------|------|
+| `400` | `VALIDATION_ERROR` | Bad query parameters |
+| `401` | `UNAUTHORIZED` | Missing or invalid token |
+| `403` | `FORBIDDEN` | Insufficient permissions |
+| `404` | `NOT_FOUND` | Endpoint or resource missing |
+| `429` | `RATE_LIMITED` | Too many requests (see below) |
+| `500` | `INTERNAL_ERROR` | Unexpected server failure |
+| `502` | `BAD_GATEWAY` | Upstream service unreachable |
+| `503` | `SERVICE_UNAVAILABLE` | Service temporarily offline |
 
-### 500 Internal Server Error
-```json
-{
-  "success": false,
-  "error": {
-    "code": "INTERNAL_ERROR",
-    "message": "An unexpected error occurred"
-  }
-}
-```
+---
 
 ## Rate Limiting
-- 1000 requests per hour per IP
-- 100 requests per minute per user
-- Rate limit headers included in responses
+
+The `ApiService` client enforces its own rate limit on top of any server-side limits:
+
+| Limit | Window | Behaviour |
+|-------|--------|-----------|
+| 10 requests | 5 seconds | Client-side sliding window throttle |
+| 1000 requests | 1 hour | Server-side IP-based (when backend present) |
+
+When the client rate limit is exceeded, `ApiService` throws:
+```
+Error: Rate limit exceeded. Please try again later.
+```
+
+**Retry Backoff Formula:**
+```
+delay = retryDelay × 2^(attempt-1) ± jitter(100ms)
+```
+
+| Attempt | Base Delay | With Jitter Range |
+|---------|-----------|------------------|
+| 1 | 1000ms | 900–1100ms |
+| 2 | 2000ms | 1900–2100ms |
+| 3 | 4000ms | 3900–4100ms |
+
+---
 
 ## WebSocket Events
 
 ### Connection
 ```javascript
-const ws = new WebSocket('wss://api.dashboard.com/ws');
+const ws = new WebSocket('ws://localhost:5173/ws');
 ```
 
-### Events
-- `connected`: Connection established
-- `disconnected`: Connection lost
-- `dataUpdate`: Real-time data update
-- `error`: Error occurred
+### Outgoing Events (Client → Server)
 
-### Example Usage
+| Event Type | Payload | Description |
+|------------|---------|-------------|
+| `ping` | `null` | Heartbeat keep-alive (sent every 30s) |
+| `subscribe` | `{ endpoint: string }` | Subscribe to endpoint updates |
+
+**Example:**
 ```javascript
-ws.onopen = () => {
-  console.log('Connected to WebSocket');
-};
-
-ws.onmessage = (event) => {
-  const data = JSON.parse(event.data);
-  if (data.type === 'dataUpdate') {
-    updateDashboard(data.payload);
-  }
-};
+wsService.send({ type: 'subscribe', payload: { endpoint: '/revenue' } });
 ```
+
+### Incoming Events (Server → Client)
+
+| Event Type | Payload | Description |
+|------------|---------|-------------|
+| `pong` | `null` | Heartbeat acknowledgement |
+| `connected` | `null` | Socket open confirmation |
+| `disconnected` | `{ code, reason }` | Socket closed |
+| `dataUpdate` | `{ endpoint, data }` | Live telemetry packet |
+| `error` | `{ message }` | Server-side error notification |
+
+**Example `dataUpdate` payload:**
+```json
+{
+  "type": "dataUpdate",
+  "payload": {
+    "endpoint": "/revenue",
+    "data": {
+      "total": 48100,
+      "change": 9.2,
+      "values": [5200, 6800, 4900, 7100, 8200, 9100, 6800]
+    }
+  }
+}
+```
+
+---
+
+## Caching Behaviour
+
+`ApiService` uses an in-memory `Map` for response caching:
+
+| Property | Value | Description |
+|----------|-------|-------------|
+| Default TTL | 5 minutes (300,000ms) | Time before cache entry expires |
+| Key Format | `${url}-${JSON.stringify(options)}` | Unique per endpoint + options combo |
+| Cache Bypass | `{ cache: false }` in options | Force fresh fetch |
+| Custom TTL | `{ cacheTTL: ms }` in options | Override default TTL |
+
+**Cache lifecycle:**
+1. Check if key exists in Map
+2. If exists and `Date.now() - timestamp < TTL` → return cached
+3. If expired → delete stale entry, fetch fresh
+4. On success → `cache.set(key, { data, timestamp: Date.now() })`
