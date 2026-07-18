@@ -1,36 +1,20 @@
-# JavaScript Performance Guide
+# JavaScript Performance Guide - Day 3
 
-## Optimization Techniques Used
-- Fetch chart data concurrently with Promise.all to reduce total load time.
-- Cache API responses in memory to avoid repeated network calls.
-- Debounce resize handling so chart redraws do not run too frequently.
-- Load the chart library dynamically only when needed.
-- Limit rendered metric items in the UI to keep DOM updates lightweight.
+This document outlines the optimization mechanisms and best practices verified in the Day 3 Telemetry Dashboard.
 
-## Memory Management in This Dashboard
-- Store only recent performance history in local storage with a fixed limit.
-- Keep only the latest metric entries visible in the performance panel.
-- Use Map and Set collections for efficient cache and subscriber tracking.
-- Clear data cache before manual refresh to prevent stale render cycles.
-- Collect heap usage only when the browser supports memory APIs.
+## 1. Instrumentation and Performance Tracking
+Core Web Vitals are monitored dynamically through the `PerformanceObserver` API:
+- **Largest Contentful Paint (LCP)**: Observes load speed milestones.
+- **First Input Delay (FID)**: Captures responsiveness delay during initial input clicks.
+- **Cumulative Layout Shift (CLS)**: Validates visual layout stability.
+- **Used JS Heap Size**: Queries `performance.memory` at regular intervals to monitor memory leaks.
 
-## Performance Validation Checklist
-- Charts load without blocking the UI.
-- Refresh updates charts with fresh data.
-- Resizing the window does not cause lag spikes.
-- Performance panel updates continuously during interaction.
-- Stored metrics remain within the configured maximum size.
+## 2. API Latency & Network Monitoring
+To measure round-trip communication costs:
+- Data retrieval delays are calculated by checking `performance.now()` values around fetch commands.
+- Results are logged into the telemetry panel, providing a visual profile of latency.
 
-## Known Risks and Improvement Targets
-- Add a cleanup lifecycle method to remove listeners and clear intervals.
-- Add safer formatting for non-numeric metric values.
-- Standardize API path construction to avoid duplicated path segments.
-- Align chart container selector usage between markup and JavaScript.
-- Add automated tests for caching behavior and observer updates.
-
-## Recommended Next Enhancements
-- Add request cancellation support for in-flight refreshes.
-- Add throttling for high-frequency interaction metrics.
-- Add sampling or aggregation for long sessions.
-- Add basic unit tests for DataManager cache logic.
-- Add smoke tests for chart rendering and metric panel updates.
+## 3. DOM Rendering & Event Optimization
+- **Event Delegation**: Active links are highlighted using event listeners bound to lists.
+- **Passive Event Observers**: Event triggers (scrolls, touches) use `{ passive: true }` parameter settings, avoiding main-thread blockings.
+- **Window Resize Debouncing**: Window resize updates are throttled using custom debouncers, reducing layout recalcs during resizing.
