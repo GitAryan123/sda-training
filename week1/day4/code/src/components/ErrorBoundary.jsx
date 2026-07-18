@@ -1,4 +1,5 @@
 import React from 'react';
+import PropTypes from 'prop-types';
 
 class ErrorBoundary extends React.Component {
   constructor(props) {
@@ -15,24 +16,23 @@ class ErrorBoundary extends React.Component {
       error: error,
       errorInfo: errorInfo
     });
-
-    // Log error to monitoring service
-    console.error('ErrorBoundary caught an error:', error, errorInfo);
+    console.error('[ErrorBoundary] Caught exception:', error, errorInfo);
   }
 
   render() {
     if (this.state.hasError) {
       return (
-        <div className="error-boundary">
+        <div className="error-boundary-container">
+          <span className="warning-icon">⚠</span>
           <h2>Something went wrong</h2>
-          <details style={{ whiteSpace: 'pre-wrap' }}>
-            <summary>Error Details</summary>
-            {this.state.error && this.state.error.toString()}
-            <br />
-            {this.state.errorInfo.componentStack}
+          <p>The dashboard encountered a runtime exception.</p>
+          <details className="error-details">
+            <summary>View Stack Trace</summary>
+            <pre>{this.state.error && this.state.error.toString()}</pre>
+            <pre>{this.state.errorInfo && this.state.errorInfo.componentStack}</pre>
           </details>
-          <button onClick={() => window.location.reload()}>
-            Reload Page
+          <button onClick={() => window.location.reload()} className="btn btn-primary">
+            Reload Application
           </button>
         </div>
       );
@@ -41,5 +41,9 @@ class ErrorBoundary extends React.Component {
     return this.props.children;
   }
 }
+
+ErrorBoundary.propTypes = {
+  children: PropTypes.node.isRequired
+};
 
 export { ErrorBoundary };
