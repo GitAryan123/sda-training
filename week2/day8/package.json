@@ -1,0 +1,23 @@
+{
+  "name": "day8-nodejs-server",
+  "version": "1.0.0",
+  "description": "Day 8 — Node.js Deep Dive: multi-service server with clustering, JWT auth, and performance monitoring",
+  "main": "server/index.js",
+  "scripts": {
+    "start": "node server/index.js",
+    "start:cluster": "set CLUSTER_MODE=true&& node server/index.js",
+    "dev": "set CLUSTER_MODE=false&& node --watch server/index.js",
+    "test": "node tests/run.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "compression": "^1.7.4",
+    "cors": "^2.8.5",
+    "express": "^4.18.2",
+    "express-rate-limit": "^6.10.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "socket.io": "^4.8.0",
+    "uuid": "^9.0.0"
+  }
+}

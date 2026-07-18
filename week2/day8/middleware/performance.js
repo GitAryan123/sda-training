@@ -1,77 +1,113 @@
-const performance = require('perf_hooks');
+'use strict';
 
+const { performance } = require('perf_hooks');
+const { logger } = require('./errorHandler');
+
+/**
+ * PerformanceMonitor — tracks named timers and aggregates process-level
+ * metrics (heap, RSS, uptime, event loop lag).
+ */
 class PerformanceMonitor {
   constructor() {
-    this.metrics = new Map();
-    this.startTime = Date.now();
+    this.timers = new Map();
+    this.requestCount = 0;
+    this.errorCount = 0;
+    this.totalResponseTime = 0;
+    this.startedAt = Date.now();
   }
 
+  /** Start a named timer. Call endTimer() with the same name to record duration. */
   startTimer(name) {
-    const timer = performance.performance.now();
-    this.metrics.set(name, { start: timer });
+    this.timers.set(name, performance.now());
   }
 
+  /** End a named timer. Returns duration in ms, or -1 if timer was never started. */
   endTimer(name) {
-    const timer = this.metrics.get(name);
-    if (timer) {
-      const duration = performance.performance.now() - timer.start;
-      this.metrics.set(name, { ...timer, duration, end: performance.performance.now() });
-      return duration;
-    }
-    return null;
+    const start = this.timers.get(name);
+    if (start === undefined) return -1;
+    const duration = performance.now() - start;
+    this.timers.delete(name);
+    return duration;
   }
 
-  getMetrics() {
-    const uptime = Date.now() - this.startTime;
-    const memoryUsage = process.memoryUsage();
-    
+  /** Record stats from a completed request (called by the middleware). */
+  recordRequest(durationMs, isError) {
+    this.requestCount++;
+    this.totalResponseTime += durationMs;
+    if (isError) this.errorCount++;
+  }
+
+  /** Return a snapshot of all performance metrics. */
+  getSnapshot() {
+    const mem = process.memoryUsage();
+    const uptimeMs = Date.now() - this.startedAt;
+
     return {
-      uptime,
-      memory: {
-        rss: memoryUsage.rss,
-        heapTotal: memoryUsage.heapTotal,
-        heapUsed: memoryUsage.heapUsed,
-        external: memoryUsage.external
-      },
-      timers: Object.fromEntries(this.metrics),
-      process: {
+      server: {
+        uptimeMs,
+        uptimeHuman: formatDuration(uptimeMs),
         pid: process.pid,
-        version: process.version,
-        platform: process.platform,
-        arch: process.arch
+        nodeVersion: process.version,
+        platform: process.platform
+      },
+      requests: {
+        total: this.requestCount,
+        errors: this.errorCount,
+        avgResponseMs: this.requestCount > 0
+          ? Math.round(this.totalResponseTime / this.requestCount)
+          : 0
+      },
+      memory: {
+        rssBytes: mem.rss,
+        heapTotalBytes: mem.heapTotal,
+        heapUsedBytes: mem.heapUsed,
+        heapUsedMB: (mem.heapUsed / 1024 / 1024).toFixed(2),
+        heapTotalMB: (mem.heapTotal / 1024 / 1024).toFixed(2)
       }
     };
   }
 
+  /** Reset counters (useful for rolling windows in tests). */
   reset() {
-    this.metrics.clear();
-    this.startTime = Date.now();
+    this.requestCount = 0;
+    this.errorCount = 0;
+    this.totalResponseTime = 0;
+    this.startedAt = Date.now();
   }
 }
 
-const performanceMonitor = new PerformanceMonitor();
+function formatDuration(ms) {
+  const s = Math.floor(ms / 1000);
+  const m = Math.floor(s / 60);
+  const h = Math.floor(m / 60);
+  return `${h}h ${m % 60}m ${s % 60}s`;
+}
 
-const performanceMiddleware = (req, res, next) => {
-  const startTime = performance.performance.now();
-  
+/** Singleton instance shared across the app */
+const monitor = new PerformanceMonitor();
+
+/**
+ * Express middleware — measures request duration, records stats, logs every
+ * completed request with method, path, status, and timing.
+ */
+function performanceMiddleware(req, res, next) {
+  const start = performance.now();
+
+  // Hook into the response 'finish' event so we capture the final status code
   res.on('finish', () => {
-    const duration = performance.performance.now() - startTime;
-    const memoryUsage = process.memoryUsage();
-    
-    console.log({
-      method: req.method,
-      url: req.url,
-      statusCode: res.statusCode,
-      duration: `${duration.toFixed(2)}ms`,
-      memory: {
-        heapUsed: `${(memoryUsage.heapUsed / 1024 / 1024).toFixed(2)}MB`,
-        heapTotal: `${(memoryUsage.heapTotal / 1024 / 1024).toFixed(2)}MB`
-      },
-      timestamp: new Date().toISOString()
+    const durationMs = performance.now() - start;
+    const isError = res.statusCode >= 400;
+
+    monitor.recordRequest(durationMs, isError);
+
+    const logFn = isError ? logger.warn : logger.info;
+    logFn(`${req.method} ${req.originalUrl} ${res.statusCode}`, {
+      durationMs: durationMs.toFixed(2),
+      contentLength: res.get('Content-Length') || 0
     });
   });
-  
-  next();
-};
 
-module.exports = { performanceMiddleware, performanceMonitor };
+  next();
+}
+
+module.exports = { performanceMiddleware, monitor };
