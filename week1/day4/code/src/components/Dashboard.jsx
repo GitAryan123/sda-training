@@ -1,7 +1,8 @@
 import React, { useState, useEffect, useContext, useReducer } from 'react';
-import { DataContext } from '../contexts/DataContext';
+import { DataContext } from '../context/DataContext';
+import { DashboardHeader } from './DashboardHeader';
+import { MetricsGrid } from './MetricsGrid';
 import { ChartContainer } from './ChartContainer';
-import { MetricsCard } from './MetricsCard';
 import { PerformanceMonitor } from './PerformanceMonitor';
 import { ErrorBoundary } from './ErrorBoundary';
 import './Dashboard.css';
@@ -10,9 +11,9 @@ const initialState = {
   loading: false,
   error: null,
   data: {
-    users: [],
-    revenue: [],
-    orders: []
+    users: { labels: [], values: [] },
+    revenue: { labels: [], values: [] },
+    orders: { labels: [], values: [] }
   },
   filters: {
     dateRange: '30d',
@@ -42,36 +43,37 @@ export function Dashboard() {
   const [selectedMetric, setSelectedMetric] = useState('revenue');
   const [viewMode, setViewMode] = useState('grid');
   
-  const { fetchData, subscribe, unsubscribe } = useContext(DataContext);
+  const { fetchData, subscribe } = useContext(DataContext);
+
+  const loadData = async () => {
+    dispatch({ type: 'SET_LOADING', payload: true });
+    
+    try {
+      const [users, revenue, orders] = await Promise.all([
+        fetchData('/users'),
+        fetchData('/revenue'),
+        fetchData('/orders')
+      ]);
+      
+      dispatch({
+        type: 'SET_DATA',
+        payload: { users, revenue, orders }
+      });
+    } catch (error) {
+      dispatch({ type: 'SET_ERROR', payload: error.message });
+    }
+  };
 
   useEffect(() => {
-    const loadData = async () => {
-      dispatch({ type: 'SET_LOADING', payload: true });
-      
-      try {
-        const [users, revenue, orders] = await Promise.all([
-          fetchData('/api/users'),
-          fetchData('/api/revenue'),
-          fetchData('/api/orders')
-        ]);
-        
-        dispatch({
-          type: 'SET_DATA',
-          payload: { users, revenue, orders }
-        });
-      } catch (error) {
-        dispatch({ type: 'SET_ERROR', payload: error.message });
-      }
-    };
-
     loadData();
   }, [fetchData]);
 
   useEffect(() => {
-    const handleDataUpdate = (endpoint, data) => {
+    const handleDataUpdate = (endpoint, updatedData) => {
+      const key = endpoint.split('/').pop(); // 'users', 'revenue', or 'orders'
       dispatch({
         type: 'SET_DATA',
-        payload: { ...state.data, [endpoint.split('/').pop()]: data }
+        payload: { ...state.data, [key]: updatedData }
       });
     };
 
@@ -86,30 +88,12 @@ export function Dashboard() {
     });
   };
 
-  const handleRefresh = async () => {
-    dispatch({ type: 'SET_LOADING', payload: true });
-    try {
-      const [users, revenue, orders] = await Promise.all([
-        fetchData('/api/users'),
-        fetchData('/api/revenue'),
-        fetchData('/api/orders')
-      ]);
-      
-      dispatch({
-        type: 'SET_DATA',
-        payload: { users, revenue, orders }
-      });
-    } catch (error) {
-      dispatch({ type: 'SET_ERROR', payload: error.message });
-    }
-  };
-
   if (state.loading) {
     return <LoadingSpinner />;
   }
 
   if (state.error) {
-    return <ErrorMessage error={state.error} onRetry={handleRefresh} />;
+    return <ErrorMessage error={state.error} onRetry={loadData} />;
   }
 
   return (
@@ -118,7 +102,7 @@ export function Dashboard() {
         <DashboardHeader
           filters={state.filters}
           onFilterChange={handleFilterChange}
-          onRefresh={handleRefresh}
+          onRefresh={loadData}
           viewMode={viewMode}
           onViewModeChange={setViewMode}
         />
@@ -141,23 +125,21 @@ export function Dashboard() {
   );
 }
 
-// Loading component
 function LoadingSpinner() {
   return (
     <div className="loading-container">
       <div className="spinner"></div>
-      <p>Loading dashboard data...</p>
+      <p>Loading telemetry data...</p>
     </div>
   );
 }
 
-// Error component
 function ErrorMessage({ error, onRetry }) {
   return (
     <div className="error-container">
       <h2>Error Loading Dashboard</h2>
       <p>{error}</p>
-      <button onClick={onRetry} className="retry-btn">
+      <button onClick={onRetry} className="btn btn-primary" style={{ marginTop: '1rem' }}>
         Try Again
       </button>
     </div>
