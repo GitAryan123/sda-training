@@ -8,22 +8,18 @@ const helmet = require('helmet');
 const compression = require('compression');
 const rateLimit = require('express-rate-limit');
 
-// Import services
-const userService = require('./services/userService');
-const productService = require('./services/productService');
-const orderService = require('./services/orderService');
-const notificationService = require('./services/notificationService');
+const userService = require('../services/userService');
+const productService = require('../services/productService');
+const orderService = require('../services/orderService');
+const notificationService = require('../services/notificationService');
 
-// Import middleware
-const errorHandler = require('./middleware/errorHandler');
-const logger = require('./middleware/logger');
-const auth = require('./middleware/auth');
+const { errorHandler, logger } = require('../middleware/errorHandler');
+const { performanceMiddleware } = require('../middleware/performance');
 
-// Import routes
-const userRoutes = require('./routes/userRoutes');
-const productRoutes = require('./routes/productRoutes');
-const orderRoutes = require('./routes/orderRoutes');
-const healthRoutes = require('./routes/healthRoutes');
+const userRoutes = require('../routes/userRoutes');
+const productRoutes = require('../routes/productRoutes');
+const orderRoutes = require('../routes/orderRoutes');
+const healthRoutes = require('../routes/healthRoutes');
 
 class Application {
   constructor() {
@@ -41,14 +37,14 @@ class Application {
 
   async initialize() {
     try {
-      await this.setupMiddleware();
-      await this.setupRoutes();
+      this.setupMiddleware();
+      this.setupRoutes();
       await this.setupServices();
-      await this.setupWebSocket();
-      await this.setupErrorHandling();
-      await this.startServer();
+      this.setupWebSocket();
+      this.setupErrorHandling();
+      this.startServer();
     } catch (error) {
-      console.error('Application initialization failed:', error);
+      logger.error('Application initialization failed', { error: error.message });
       process.exit(1);
     }
   }
@@ -76,8 +72,8 @@ class Application {
     this.app.use(express.json({ limit: '10mb' }));
     this.app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-    // Logging
-    this.app.use(logger);
+    // Request performance instrumentation
+    this.app.use(performanceMiddleware);
   }
 
   setupRoutes() {
@@ -99,35 +95,38 @@ class Application {
   }
 
   async setupServices() {
-    // Initialize services
-    await userService.initialize();
-    await productService.initialize();
-    await orderService.initialize();
-    await notificationService.initialize();
+    await Promise.all([
+      userService.initialize(),
+      productService.initialize(),
+      orderService.initialize(),
+      notificationService.initialize()
+    ]);
 
-    console.log('All services initialized successfully');
+    logger.info('All services initialized successfully');
   }
 
   setupWebSocket() {
+    notificationService.attachIO(this.io);
+
     this.io.on('connection', (socket) => {
-      console.log('Client connected:', socket.id);
+      logger.info('Socket connected', { socketId: socket.id });
 
       socket.on('join', (room) => {
         socket.join(room);
-        console.log(`Client ${socket.id} joined room ${room}`);
+        logger.info('Socket joined room', { socketId: socket.id, room });
       });
 
       socket.on('disconnect', () => {
-        console.log('Client disconnected:', socket.id);
+        logger.info('Socket disconnected', { socketId: socket.id });
       });
 
-      // Handle custom events
+      // Basic event bridge for demo purposes
       socket.on('user:update', (data) => {
-        socket.broadcast.emit('user:updated', data);
+        notificationService.broadcast('user:updated', data);
       });
 
       socket.on('order:create', (data) => {
-        socket.broadcast.emit('order:created', data);
+        notificationService.broadcast('order:created', data);
       });
     });
   }
@@ -135,54 +134,58 @@ class Application {
   setupErrorHandling() {
     this.app.use(errorHandler);
 
-    // Unhandled promise rejections
     process.on('unhandledRejection', (reason, promise) => {
-      console.error('Unhandled Rejection at:', promise, 'reason:', reason);
-      process.exit(1);
+      logger.error('Unhandled promise rejection', {
+        reason: String(reason),
+        promise: String(promise)
+      });
     });
 
-    // Uncaught exceptions
     process.on('uncaughtException', (error) => {
-      console.error('Uncaught Exception:', error);
+      logger.error('Uncaught exception', { error: error.message, stack: error.stack });
       process.exit(1);
     });
   }
 
   startServer() {
     this.server.listen(this.port, () => {
-      console.log(`Server running on port ${this.port}`);
-      console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-      console.log(`Process ID: ${process.pid}`);
+      logger.info('Server started', {
+        port: this.port,
+        environment: process.env.NODE_ENV || 'development',
+        pid: process.pid
+      });
     });
   }
 }
 
-// Clustering setup
-if (cluster.isMaster) {
-  const numCPUs = os.cpus().length;
-  console.log(`Master process ${process.pid} is running`);
-  console.log(`Starting ${numCPUs} workers`);
+// Enable cluster in production, single process in local dev.
+const shouldCluster = process.env.CLUSTER_MODE === 'true' || process.env.NODE_ENV === 'production';
 
-  // Fork workers
-  for (let i = 0; i < numCPUs; i++) {
+if (shouldCluster && cluster.isPrimary) {
+  const cpuCount = os.cpus().length;
+  logger.info('Primary cluster process started', { pid: process.pid, workers: cpuCount });
+
+  for (let i = 0; i < cpuCount; i++) {
     cluster.fork();
   }
 
   cluster.on('exit', (worker, code, signal) => {
-    console.log(`Worker ${worker.process.pid} died`);
-    console.log('Starting a new worker');
+    logger.warn('Worker exited, restarting', {
+      workerPid: worker.process.pid,
+      code,
+      signal
+    });
     cluster.fork();
   });
 
-  // Graceful shutdown
   process.on('SIGTERM', () => {
-    console.log('Master received SIGTERM, shutting down gracefully');
-    for (const id in cluster.workers) {
-      cluster.workers[id].kill();
-    }
+    logger.info('Primary received SIGTERM, shutting down workers');
+    Object.values(cluster.workers).forEach((worker) => {
+      if (worker) worker.kill();
+    });
+    process.exit(0);
   });
 } else {
-  // Worker process
   const app = new Application();
   app.initialize();
 }
