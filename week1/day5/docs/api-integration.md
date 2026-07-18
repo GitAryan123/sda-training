@@ -1,55 +1,24 @@
-# API Integration Guide
+# API Integration & Real-Time Data Guide - Day 5
 
-## Overview
-This document summarizes how I implemented API integration and real-time data handling in Day 5.  
-The goal was to build a reliable data layer for dashboard metrics using REST APIs for initial data and WebSockets for live updates.
+This guide details the custom API service layer, connection safety models, and real-time subscription routines created for the Day 5 Telemetry Dashboard.
 
-## REST API Best Practices
-- Used correct HTTP methods for each operation:
-  - GET for reading data
-  - POST for creating data
-  - PUT for full updates
-  - DELETE for removal
-- Centralized API logic in a service class to avoid repeated fetch code.
-- Added request timeout handling using AbortController.
-- Implemented retry logic for temporary failures (timeouts and 5xx errors).
-- Added in-memory caching with TTL to reduce unnecessary requests.
-- Standardized JSON headers and response parsing.
-- Used try/catch for error handling and surfaced clear error messages to UI.
+## 1. REST API Caching & Safety Layer (`ApiService.js`)
+To safeguard server performance and optimize bundle bandwidth, the API service layer houses two core components:
+- **Response Caching map**: GET queries are cached using a Map. They expire automatically after a set TTL duration (default 5 minutes). Duplicate queries bypass fetch routines entirely.
+- **Exponential Retry Backoff with Jitter**: If a request aborts or server errors (500, 502, 503) occur, the client backs off and retries:
+  $$\text{Delay} = \text{retryDelay} \times 2^{\text{attempt} - 1} \pm \text{jitter (100ms)}$$
+  The randomized jitter prevents thundering herd requests on recovering servers.
+- **Rate Limit Window Throttler**: The client tracks its own request timestamps. If requests exceed 10 actions within a 5-second window, outgoing fetches are throttled.
 
-## Error Handling and Reliability
-- Handled transient errors with exponential backoff retries.
-- Avoided retrying non-recoverable errors.
-- Logged failures for debugging.
-- Returned controlled errors to components instead of crashing the app.
-- Added manual refresh to recover quickly from stale or failed requests.
+## 2. WebSocket Reconnection & Offline Queue (`WebSocketService.js`)
+The WebSocket connection manager ensures absolute consistency during network drops:
+- **Heartbeat Checks**: Sends periodic ping packets (every 30s) and expects a pong. If pongs cease, it closes the socket and triggers reconnection.
+- **Jittered Backoff Reconnection**: Reconnection attempts double their timeouts progressively (up to 30s) with added random jitter.
+- **Offline Message Buffer**: If `send()` is invoked when offline, messages are pushed to a queue. Upon socket opening, the queue is completely processed and emitted.
 
-## WebSocket Implementation
-- Built a WebSocket service for real-time events.
-- Managed connection lifecycle:
-  - connect
-  - listen
-  - disconnect
-  - reconnect
-- Implemented heartbeat (ping/pong) to keep connection alive.
-- Added reconnection with max attempt limits.
-- Queued outgoing messages while offline and sent them after reconnect.
-- Used event-based subscriptions for clean message handling.
-
-## Real-Time Data Strategy
-- Fetched initial snapshot from REST API.
-- Subscribed to WebSocket messages for live updates.
-- Merged incremental updates into existing state.
-- Tracked connection state and displayed:
-  - Connected
-  - Partial connection
-  - Disconnected
-- Added optional auto-refresh for periodic consistency checks.
-
-## Performance Considerations
-- Used caching to reduce duplicate API calls.
-- Refreshed data only when needed.
-- Avoided full data reload for every live update.
-- Kept socket message handling lightweight.
-- Used reusable hooks to keep components focused on UI.
-
+## 3. Real-Time Telemetry Hook (`useRealTimeData.js`)
+The custom hook coordinates synchronization:
+1. **REST Initial Fetch**: Fetches baseline historical metrics. On fetch failures, it falls back to generating randomized mock packages.
+2. **WebSocket Stream Subscription**: Registers to messages on the socket. When `dataUpdate` events match the target endpoint, local state values update.
+3. **Local Telemetry Simulation**: If the websocket server is offline/mocked, a local timer updates values periodically to verify UI chart transitions.
+4. **Latency Measurement**: Calculates time differences (RTT) on telemetry ticks.
