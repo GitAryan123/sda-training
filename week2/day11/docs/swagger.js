@@ -1,5 +1,8 @@
+'use strict';
+
 const swaggerJSDoc = require('swagger-jsdoc');
 const swaggerUi = require('swagger-ui-express');
+const path = require('path');
 
 const options = {
   definition: {
@@ -7,7 +10,7 @@ const options = {
     info: {
       title: 'SDA Training API',
       version: '1.0.0',
-      description: 'Advanced backend API for SDA training program',
+      description: 'Advanced backend API for SDA training program, implementing REST best practices.',
       contact: {
         name: 'API Support',
         email: 'support@sda-training.com'
@@ -21,10 +24,6 @@ const options = {
       {
         url: 'http://localhost:3000/api/v1',
         description: 'Development server'
-      },
-      {
-        url: 'https://api.sda-training.com/v1',
-        description: 'Production server'
       }
     ],
     components: {
@@ -171,7 +170,11 @@ const options = {
       }
     ]
   },
-  apis: ['./routes/**/*.js', './models/**/*.js']
+  // Search path relative to where index.js is started (typically day11 root or day11/server/)
+  apis: [
+    path.join(__dirname, '../routes/api/v1/*.js'),
+    path.join(__dirname, '../routes/*.js')
+  ]
 };
 
 const specs = swaggerJSDoc(options);
