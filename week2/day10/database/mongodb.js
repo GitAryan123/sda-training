@@ -1,68 +1,74 @@
+'use strict';
+
 const mongoose = require('mongoose');
-const { logger } = require('../middleware/errorHandler');
 
-class MongoDBConnection {
-  constructor() {
-    this.connection = null;
-    this.isConnected = false;
-  }
+/**
+ * MongoDB Connection Factory
+ * Configures and manages connection status using closures instead of classes.
+ */
+function createMongoDBConnection() {
+  let isConnected = false;
 
-  async connect() {
+  const connect = async () => {
     try {
       const mongoUri = process.env.MONGODB_URI || 'mongodb://localhost:27017/sda-training';
       
-      this.connection = await mongoose.connect(mongoUri, {
+      await mongoose.connect(mongoUri, {
         useNewUrlParser: true,
         useUnifiedTopology: true,
         maxPoolSize: 10,
         serverSelectionTimeoutMS: 5000,
-        socketTimeoutMS: 45000,
-        bufferCommands: false,
-        bufferMaxEntries: 0
+        socketTimeoutMS: 45000
       });
 
-      this.isConnected = true;
-      logger.info('MongoDB connected successfully');
+      isConnected = true;
+      console.log('[MongoDB] Connected successfully');
 
-      // Connection event handlers
+      // Hook lifecycle event handlers
       mongoose.connection.on('error', (error) => {
-        logger.error('MongoDB connection error:', error);
-        this.isConnected = false;
+        console.error('[MongoDB] Connection error:', error);
+        isConnected = false;
       });
 
       mongoose.connection.on('disconnected', () => {
-        logger.warn('MongoDB disconnected');
-        this.isConnected = false;
+        console.warn('[MongoDB] Disconnected');
+        isConnected = false;
       });
 
       mongoose.connection.on('reconnected', () => {
-        logger.info('MongoDB reconnected');
-        this.isConnected = true;
+        console.log('[MongoDB] Reconnected');
+        isConnected = true;
       });
 
     } catch (error) {
-      logger.error('MongoDB connection failed:', error);
+      console.error('[MongoDB] Connection failed:', error);
       throw error;
     }
-  }
+  };
 
-  async disconnect() {
-    if (this.connection) {
+  const disconnect = async () => {
+    if (mongoose.connection.readyState !== 0) {
       await mongoose.disconnect();
-      this.isConnected = false;
-      logger.info('MongoDB disconnected');
+      isConnected = false;
+      console.log('[MongoDB] Disconnected manually');
     }
-  }
+  };
 
-  getConnectionStatus() {
+  const getConnectionStatus = () => {
     return {
-      isConnected: this.isConnected,
+      isConnected,
       readyState: mongoose.connection.readyState,
       host: mongoose.connection.host,
       port: mongoose.connection.port,
       name: mongoose.connection.name
     };
-  }
+  };
+
+  return {
+    connect,
+    disconnect,
+    getConnectionStatus
+  };
 }
 
-module.exports = new MongoDBConnection();
+module.exports = createMongoDBConnection();

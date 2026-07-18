@@ -1,0 +1,16 @@
+{
+  "name": "day10-mongodb-sql",
+  "version": "1.0.0",
+  "description": "Day 10 — MongoDB & SQL: Database connection pooling, models, and migrations using factory functions",
+  "main": "database/mongodb.js",
+  "scripts": {
+    "test": "node tests/db.test.js"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "dotenv": "^16.3.1",
+    "jsonwebtoken": "^9.0.2",
+    "mongoose": "^7.5.0",
+    "pg": "^8.11.3"
+  }
+}
